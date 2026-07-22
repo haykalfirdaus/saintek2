@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
 import { Trash2, CalendarOff } from 'lucide-react'
+import { useConfirm } from '@/components/confirm-dialog'
 
 // Custom Hari Libur (default libur hanya Minggu). Admin set "Libur Ekstra".
 export function PanelLibur() {
   const supabase = createClient()
+  const confirm = useConfirm()
   const [rows, setRows] = useState([])
   const [tanggal, setTanggal] = useState('')
   const [ket, setKet] = useState('')
@@ -32,6 +34,8 @@ export function PanelLibur() {
   }
 
   async function remove(t) {
+    const ok = await confirm({ title: 'Hapus Libur?', message: 'Hapus hari libur ini?', danger: true, confirmText: 'Ya, Hapus' })
+    if (!ok) return
     const { error } = await supabase.from('holidays').delete().eq('tanggal', t)
     if (error) return notify(error.message, 'error')
     load()

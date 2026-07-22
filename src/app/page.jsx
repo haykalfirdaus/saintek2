@@ -2,6 +2,7 @@ import { LiveHeader } from '@/components/live-header'
 import { BottomNav } from '@/components/bottom-nav'
 import { AnnouncementPopup } from '@/components/announcement-popup'
 import { GallerySlider } from '@/components/gallery-slider'
+import { ZoomableImage } from '@/components/zoomable-image'
 import { UploadFotoButton } from '@/components/upload-foto-button'
 import { TaskCard } from '@/components/task-card'
 import { getLandingData } from '@/lib/data'
@@ -64,7 +65,7 @@ export default async function HomePage() {
                   {Array.isArray(a.media_urls) && a.media_urls.length > 0 && (
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       {a.media_urls.map((u, i) => (
-                        <img key={i} src={u} alt="" className="h-28 w-full rounded-lg object-cover" loading="lazy" />
+                        <ZoomableImage key={i} src={u} alt="" className="h-28 w-full rounded-lg object-cover" />
                       ))}
                     </div>
                   )}

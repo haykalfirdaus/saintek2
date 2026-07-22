@@ -5,10 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
 import { ROLE_LABEL } from '@/lib/roles'
 import { UserPlus, KeyRound } from 'lucide-react'
+import { useConfirm } from '@/components/confirm-dialog'
 
 // Manajemen Akun (developer): buat admin & ganti password tanpa verifikasi email.
 export function PanelAkun() {
   const supabase = createClient()
+  const confirm = useConfirm()
   const [admins, setAdmins] = useState([])
   const [toast, setToast] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -36,6 +38,11 @@ export function PanelAkun() {
 
   async function createAdmin() {
     if (!create.email || !create.password) return notify('Email & password wajib', 'error')
+    const ok = await confirm({
+      title: 'Buat Akun Admin?',
+      message: `Buat akun ${ROLE_LABEL[create.role]} untuk ${create.email}?`,
+    })
+    if (!ok) return
     setLoading(true)
     try {
       await callApi('create', create)
@@ -44,9 +51,16 @@ export function PanelAkun() {
     } catch (e) { notify(e.message, 'error') } finally { setLoading(false) }
   }
 
-  async function changePassword(userId) {
+  async function changePassword(userId, nama) {
     const password = pw[userId]
     if (!password || password.length < 6) return notify('Password minimal 6 karakter', 'error')
+    const ok = await confirm({
+      title: 'Ganti Password?',
+      message: `Ganti password untuk ${nama}? Password lama tidak bisa dikembalikan.`,
+      danger: true,
+      confirmText: 'Ya, Ganti',
+    })
+    if (!ok) return
     setLoading(true)
     try {
       await callApi('set_password', { userId, password })
@@ -55,7 +69,12 @@ export function PanelAkun() {
     } catch (e) { notify(e.message, 'error') } finally { setLoading(false) }
   }
 
-  async function changeRole(userId, role) {
+  async function changeRole(userId, role, nama) {
+    const ok = await confirm({
+      title: 'Ubah Role?',
+      message: `Ubah role ${nama} menjadi ${ROLE_LABEL[role]}?`,
+    })
+    if (!ok) { load(); return } // reset select ke nilai semula
     try { await callApi('set_role', { userId, role }); load() }
     catch (e) { notify(e.message, 'error') }
   }
@@ -91,14 +110,14 @@ export function PanelAkun() {
                 <p className="text-xs text-muted-foreground">{ROLE_LABEL[a.role]}</p>
               </div>
               <select className="rounded-md border border-border bg-background px-2 py-1 text-xs"
-                defaultValue={a.role} onChange={(e) => changeRole(a.id, e.target.value)}>
+                value={a.role} onChange={(e) => changeRole(a.id, e.target.value, a.full_name)}>
                 {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
             <div className="flex gap-2">
               <input className="input-field py-2 text-sm" placeholder="Password baru"
                 value={pw[a.id] || ''} onChange={(e) => setPw((p) => ({ ...p, [a.id]: e.target.value }))} />
-              <button className="btn-primary px-3" onClick={() => changePassword(a.id)}>
+              <button className="btn-primary px-3" onClick={() => changePassword(a.id, a.full_name)}>
                 <KeyRound className="h-4 w-4" />
               </button>
             </div>

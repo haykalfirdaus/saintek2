@@ -69,10 +69,19 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  html,
   body {
     @apply bg-background text-foreground antialiased;
-    /* Prevent horizontal scroll on mobile */
+    /* Cegah geser horizontal keluar layar di HP */
     overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* Media tidak boleh melebihi lebar kontainer */
+  img,
+  video,
+  svg {
+    max-width: 100%;
   }
 }
 

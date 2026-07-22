@@ -306,6 +306,29 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- =============================================================
+--  RPC: susun ulang no_absen mengikuti urutan alfabet nama
+--  Dipakai setiap ada tambah/edit/hapus siswa.
+-- =============================================================
+create or replace function public.renumber_students_alpha()
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if public.current_role() not in ('developer','sekretaris','ketua') then
+    raise exception 'Tidak diizinkan';
+  end if;
+  -- geser dulu ke ruang aman agar tidak bentrok unique(no_absen)
+  update public.students set no_absen = no_absen + 100000;
+  -- nomori ulang 1..N sesuai alfabet (case-insensitive)
+  with ordered as (
+    select id, row_number() over (order by lower(nama) asc) as rn
+    from public.students
+  )
+  update public.students s
+  set no_absen = o.rn
+  from ordered o
+  where s.id = o.id;
+end $$;
+
+-- =============================================================
 --  RPC: bulk insert siswa dari paste Excel (satu nama per baris)
 -- =============================================================
 create or replace function public.bulk_insert_students(names text[])

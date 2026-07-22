@@ -5,10 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { uploadToBucket } from '@/lib/upload'
 import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
 import { Trash2, Image as ImageIcon } from 'lucide-react'
+import { useConfirm } from '@/components/confirm-dialog'
 
 // Popup Besar (hanya developer). Muncul di tengah layar landing.
 export function PanelPopup() {
   const supabase = createClient()
+  const confirm = useConfirm()
   const fileRef = useRef(null)
   const [rows, setRows] = useState([])
   const [form, setForm] = useState({ judul: '', dari: '', isi: '', active_until: '' })
@@ -45,7 +47,11 @@ export function PanelPopup() {
     } catch (e) { notify(e.message, 'error') } finally { setLoading(false) }
   }
 
-  async function remove(id) { await supabase.from('announcements').delete().eq('id', id); load() }
+  async function remove(id) {
+    const ok = await confirm({ title: 'Hapus Popup?', message: 'Popup akan dihapus permanen.', danger: true, confirmText: 'Ya, Hapus' })
+    if (!ok) return
+    await supabase.from('announcements').delete().eq('id', id); load()
+  }
 
   return (
     <div>

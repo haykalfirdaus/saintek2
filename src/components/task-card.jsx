@@ -1,4 +1,5 @@
 import { Clock, CalendarRange } from 'lucide-react'
+import { ZoomableImage } from '@/components/zoomable-image'
 
 function fmt(dt) {
   if (!dt) return null
@@ -40,11 +41,10 @@ export function TaskCard({ task }) {
       )}
 
       {task.photo_url && (
-        <img
+        <ZoomableImage
           src={task.photo_url}
           alt={`Lampiran tugas ${task.mapel}`}
           className="mt-3 max-h-72 w-full rounded-lg border border-border object-cover"
-          loading="lazy"
         />
       )}
     </article>

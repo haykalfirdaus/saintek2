@@ -5,10 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { uploadToBucket } from '@/lib/upload'
 import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
 import { Paperclip, Trash2 } from 'lucide-react'
+import { useConfirm } from '@/components/confirm-dialog'
 
 // Pengumuman biasa: Dari (opsional), Isi (teks/multi-foto/file), Masa berlaku.
 export function PanelPengumuman() {
   const supabase = createClient()
+  const confirm = useConfirm()
   const fileRef = useRef(null)
   const [rows, setRows] = useState([])
   const [form, setForm] = useState({ dari: '', judul: '', isi: '', active_from: '', active_until: '' })
@@ -46,7 +48,11 @@ export function PanelPengumuman() {
     } catch (e) { notify(e.message, 'error') } finally { setLoading(false) }
   }
 
-  async function remove(id) { await supabase.from('announcements').delete().eq('id', id); load() }
+  async function remove(id) {
+    const ok = await confirm({ title: 'Hapus Pengumuman?', message: 'Pengumuman akan dihapus permanen.', danger: true, confirmText: 'Ya, Hapus' })
+    if (!ok) return
+    await supabase.from('announcements').delete().eq('id', id); load()
+  }
 
   return (
     <div>

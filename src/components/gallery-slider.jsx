@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, ImageOff } from 'lucide-react'
+import { ZoomableImage } from '@/components/zoomable-image'
 
 /*
   Auto-playing, swipeable slideshow. Manual swipe/drag & arrow buttons pause
@@ -63,12 +64,10 @@ export function GallerySlider({ photos = [], autoPlayMs = 3500, className = '' }
       >
         {photos.map((p, i) => (
           <div key={p.id ?? i} className="relative h-full w-full shrink-0">
-            <img
+            <ZoomableImage
               src={p.url}
               alt={p.caption || `Foto ${i + 1}`}
               className="h-full w-full object-cover"
-              loading={i === 0 ? 'eager' : 'lazy'}
-              draggable={false}
             />
             {p.caption && (
               <span className="absolute bottom-2 left-2 rounded bg-black/50 px-2 py-1 text-xs text-white">

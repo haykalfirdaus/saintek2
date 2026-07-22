@@ -5,10 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { uploadToBucket } from '@/lib/upload'
 import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
 import { Camera, Trash2, Power } from 'lucide-react'
+import { useConfirm } from '@/components/confirm-dialog'
 
 // Input Tugas (UI Simpel): Mapel, Isi (teks/foto), Deadline (range / jam pasti).
 export function PanelTugas() {
   const supabase = createClient()
+  const confirm = useConfirm()
   const fileRef = useRef(null)
   const [tasks, setTasks] = useState([])
   const [form, setForm] = useState({
@@ -59,7 +61,13 @@ export function PanelTugas() {
     await supabase.from('tasks').update({ is_active: !t.is_active }).eq('id', t.id)
     load()
   }
-  async function remove(id) {
+  async function remove(id, mapel) {
+    const ok = await confirm({
+      title: 'Hapus Tugas?',
+      message: `Hapus tugas "${mapel}"? Tidak bisa dikembalikan.`,
+      danger: true, confirmText: 'Ya, Hapus',
+    })
+    if (!ok) return
     await supabase.from('tasks').delete().eq('id', id)
     load()
   }
@@ -124,7 +132,7 @@ export function PanelTugas() {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <button onClick={() => toggleActive(t)} className="text-muted-foreground" title="Aktif/Arsip"><Power className="h-4 w-4" /></button>
-              <button onClick={() => remove(t.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></button>
+              <button onClick={() => remove(t.id, t.mapel)} className="text-destructive"><Trash2 className="h-4 w-4" /></button>
             </div>
           </div>
         ))}

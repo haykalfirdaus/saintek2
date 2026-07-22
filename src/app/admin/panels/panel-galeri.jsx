@@ -4,10 +4,13 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PanelHeader, Toast } from '@/components/ui-bits'
 import { Trash2, Loader2, ImageOff } from 'lucide-react'
+import { useConfirm } from '@/components/confirm-dialog'
+import { ZoomableImage } from '@/components/zoomable-image'
 
 // Kelola Galeri (khusus developer): hapus foto dari DB + file di Storage.
 export function PanelGaleri() {
   const supabase = createClient()
+  const confirm = useConfirm()
   const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(null)
@@ -36,7 +39,8 @@ export function PanelGaleri() {
   }
 
   async function remove(photo) {
-    if (!confirm('Hapus foto ini permanen?')) return
+    const ok = await confirm({ title: 'Hapus Foto?', message: 'Foto akan dihapus permanen dari galeri & storage.', danger: true, confirmText: 'Ya, Hapus' })
+    if (!ok) return
     setDeleting(photo.id)
     try {
       // 1) hapus file fisik di Storage (kalau path terbaca)
@@ -78,7 +82,7 @@ export function PanelGaleri() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {photos.map((p) => (
               <div key={p.id} className="card overflow-hidden">
-                <img src={p.url} alt={p.caption || ''} className="aspect-square w-full object-cover" loading="lazy" />
+                <ZoomableImage src={p.url} alt={p.caption || ''} className="aspect-square w-full object-cover" />
                 <div className="flex items-center justify-between gap-1 p-2">
                   <button
                     onClick={() => toggleSlider(p)}

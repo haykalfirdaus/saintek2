@@ -1,5 +1,6 @@
 import { BottomNav } from '@/components/bottom-nav'
 import { GallerySlider } from '@/components/gallery-slider'
+import { ZoomableImage } from '@/components/zoomable-image'
 import { UploadFotoButton } from '@/components/upload-foto-button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { createPublicClient } from '@/lib/supabase/public'
@@ -45,7 +46,7 @@ export default async function GaleriPage() {
             <div className="grid grid-cols-2 gap-3">
               {statis.map((p) => (
                 <div key={p.id} className="card overflow-hidden">
-                  <img src={p.url} alt={p.caption || ''} className="aspect-square w-full object-cover" loading="lazy" />
+                  <ZoomableImage src={p.url} alt={p.caption || ''} className="aspect-square w-full object-cover" />
                   {p.caption && <p className="px-2 py-1 text-xs text-muted-foreground">{p.caption}</p>}
                 </div>
               ))}
