@@ -17,17 +17,25 @@ function tglLabel(iso) {
 }
 
 // Kas status: nama disembunyikan sampai ditekan "Lihat Daftar".
+// Filter Sudah/Belum berdasarkan MINGGU BERJALAN (Kamis terkini), bukan total.
 // Tiap orang punya "Selengkapnya" → rincian minggu ke berapa + tanggal bayar.
-export function KasClient({ rows, payments = {} }) {
+export function KasClient({ rows, payments = {}, currentWeek = null }) {
   const [filter, setFilter] = useState('belum')
   const [show, setShow] = useState(false)     // daftar disembunyikan default
   const [openId, setOpenId] = useState(null)   // detail per siswa
 
+  // sudah bayar utk minggu berjalan?
+  function paidThisWeek(studentId) {
+    if (!currentWeek) return false
+    return (payments[studentId] || []).some((d) => d.week_date === currentWeek)
+  }
+
   const list = useMemo(() => {
-    if (filter === 'belum') return rows.filter((r) => r.arrears > 0)
-    if (filter === 'sudah') return rows.filter((r) => r.arrears === 0)
+    // Kalau kas belum mulai (belum ada Kamis tagihan), status pakai minggu berjalan.
+    if (filter === 'belum') return rows.filter((r) => !paidThisWeek(r.student_id))
+    if (filter === 'sudah') return rows.filter((r) => paidThisWeek(r.student_id))
     return rows
-  }, [rows, filter])
+  }, [rows, filter, currentWeek, payments])
 
   const totalTunggakan = rows.reduce((s, r) => s + (r.arrears || 0), 0)
 
@@ -38,6 +46,11 @@ export function KasClient({ rows, payments = {} }) {
         <p className="text-2xl font-bold text-destructive">{formatRupiah(totalTunggakan)}</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Aturan: Rp5.000 / minggu, ditagih tiap Kamis.
+        </p>
+        <p className="mt-2 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
+          {currentWeek
+            ? `Status "Sudah/Belum" untuk minggu ini: Kamis, ${tglLabel(currentWeek)}`
+            : 'Kas belum mulai ditagih (belum ada Kamis sejak tanggal mulai).'}
         </p>
       </div>
 
@@ -81,10 +94,15 @@ export function KasClient({ rows, payments = {} }) {
                         {r.nama} <span className="text-muted-foreground">[{r.no_absen}]</span>
                       </span>
                       <div className="flex items-center gap-2">
-                        {r.arrears > 0 ? (
+                        {currentWeek && (
+                          paidThisWeek(r.student_id) ? (
+                            <span className="rounded-md bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">Sudah</span>
+                          ) : (
+                            <span className="rounded-md bg-destructive/15 px-2 py-0.5 text-xs font-semibold text-destructive">Belum</span>
+                          )
+                        )}
+                        {r.arrears > 0 && (
                           <span className="text-sm font-semibold text-destructive">{formatRupiah(r.arrears)}</span>
-                        ) : (
-                          <span className="rounded-md bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">Lunas</span>
                         )}
                         <button
                           onClick={() => setOpenId(open ? null : r.student_id)}
