@@ -14,29 +14,42 @@ export function PanelKas() {
   const [activeWeek, setActiveWeek] = useState('')
   const [toast, setToast] = useState(null)
 
-  // Build the list of Thursdays within the last ~1 month.
-  useEffect(() => {
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }))
+  // Build the list of billing Thursdays FROM start_date FORWARD to today.
+  // Minggu sebelum kas dimulai tidak ditampilkan. Terbaru tampil paling depan.
+  function buildWeeks(startISO) {
+    const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }))
+    today.setHours(0, 0, 0, 0)
+    const cur = new Date((startISO || toISODate(today)) + 'T00:00:00')
+    // maju ke Kamis pertama pada/sesudah start_date
+    while (cur.getDay() !== 4) cur.setDate(cur.getDate() + 1)
     const list = []
-    const cur = new Date(now)
-    while (cur.getDay() !== 4) cur.setDate(cur.getDate() - 1) // back to last Thursday
-    for (let i = 0; i < 5; i++) { // ~5 Kamis (>=1 bulan)
+    while (cur <= today) {
       list.push(toISODate(cur))
-      cur.setDate(cur.getDate() - 7)
+      cur.setDate(cur.getDate() + 7)
     }
-    setWeeks(list)
-    setActiveWeek(list[0])
-  }, [])
+    // kalau start_date jatuh setelah Kamis terakhir (belum ada tagihan), tetap tampilkan Kamis terdekat
+    if (!list.length) {
+      const k = new Date((startISO || toISODate(today)) + 'T00:00:00')
+      while (k.getDay() !== 4) k.setDate(k.getDate() + 1)
+      list.push(toISODate(k))
+    }
+    return list.reverse() // terbaru dulu
+  }
 
   async function load() {
-    const [{ data: st }, { data: pay }] = await Promise.all([
+    const [{ data: st }, { data: pay }, { data: setting }] = await Promise.all([
       supabase.from('students').select('*').order('no_absen'),
       supabase.from('kas_payments').select('*').eq('paid', true),
+      supabase.from('kas_settings').select('start_date').eq('id', 1).maybeSingle(),
     ])
     setStudents(st ?? [])
     const map = {}
     ;(pay ?? []).forEach((p) => { map[`${p.student_id}|${p.week_date}`] = true })
     setPayments(map)
+
+    const list = buildWeeks(setting?.start_date)
+    setWeeks(list)
+    setActiveWeek((prev) => (prev && list.includes(prev) ? prev : list[0]))
   }
   useEffect(() => { load() }, [])
 
@@ -58,9 +71,9 @@ export function PanelKas() {
   }
 
   const rekap = useMemo(() => {
-    // Rekap 1 bulan terakhir: total terkumpul dari minggu-minggu yang tampil.
+    // Rekap 1 bulan terakhir: total terkumpul dari ~4 Kamis terbaru saja.
     let total = 0
-    for (const w of weeks) {
+    for (const w of weeks.slice(0, 4)) {
       for (const s of students) if (payments[`${s.id}|${w}`]) total += 5000
     }
     return total
