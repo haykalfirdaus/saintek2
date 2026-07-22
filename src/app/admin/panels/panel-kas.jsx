@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PanelHeader, Toast } from '@/components/ui-bits'
 import { formatRupiah, toISODate } from '@/lib/utils'
+import { exportToExcel } from '@/lib/export-excel'
+import { FileDown } from 'lucide-react'
 
 // UI Absensi Kas: checkbox per siswa per minggu (Kamis). Rekap 1 bulan terakhir.
 export function PanelKas() {
@@ -144,6 +146,46 @@ export function PanelKas() {
 
   const activeWeekMeta = weeksInMonth.find((w) => w.date === activeWeek)
 
+  // Export SELURUH rekap kas ke Excel. Data TIDAK dihapus — hanya diunduh.
+  function handleExport(scope) {
+    // scope: 'month' = bulan aktif saja, 'all' = semua minggu
+    const cols = scope === 'month' ? weeksInMonth : weeks
+    if (!students.length) return notify('Belum ada siswa', 'error')
+
+    const columns = [
+      { key: 'no', label: 'No' },
+      { key: 'nama', label: 'Nama' },
+      ...cols.map((w) => ({
+        key: w.date,
+        label: `${monthLabel(w.monthKey)} - Mgg ${w.weekNo}`,
+        format: (v) => (v ? 'LUNAS' : '-'),
+      })),
+      { key: 'total', label: 'Total Dibayar' },
+    ]
+
+    const rows = students.map((s) => {
+      const row = { no: s.no_absen, nama: s.nama }
+      let paidCount = 0
+      for (const w of cols) {
+        const paid = !!payments[`${s.id}|${w.date}`]
+        row[w.date] = paid
+        if (paid) paidCount++
+      }
+      row.total = formatRupiah(paidCount * 5000)
+      return row
+    })
+
+    const label = scope === 'month' ? monthLabel(activeMonth).replace(' ', '-') : 'Semua-Minggu'
+    exportToExcel({
+      filename: `Kas-XI-Saintek-2-${label}`,
+      sheetName: 'Kas',
+      title: `Rekap Kas Kelas XI Saintek 2 — ${scope === 'month' ? monthLabel(activeMonth) : 'Semua Minggu'}`,
+      columns,
+      rows,
+    })
+    notify('File Excel diunduh')
+  }
+
   return (
     <div>
       <PanelHeader title="Absensi Kas" desc="Centang = Bayar. Kosong = Nunggak." />
@@ -152,6 +194,16 @@ export function PanelKas() {
       <div className="card mb-3 p-4">
         <p className="text-sm text-muted-foreground">Terkumpul bulan {monthLabel(activeMonth)}</p>
         <p className="text-2xl font-bold text-success">{formatRupiah(rekap)}</p>
+      </div>
+
+      {/* Export Excel — data tetap tersimpan, hanya diunduh */}
+      <div className="mb-3 flex gap-2">
+        <button className="btn-ghost flex-1 text-sm" onClick={() => handleExport('month')}>
+          <FileDown className="h-4 w-4" /> Export Bulan Ini
+        </button>
+        <button className="btn-ghost flex-1 text-sm" onClick={() => handleExport('all')}>
+          <FileDown className="h-4 w-4" /> Export Semua
+        </button>
       </div>
 
       {/* Pilih Bulan */}
