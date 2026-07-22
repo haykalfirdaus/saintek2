@@ -286,7 +286,7 @@ language sql stable security definer set search_path = public as $$
     select count(*)::int as total_weeks
     from generate_series(
       (select start_date from s),
-      (now() at time zone 'Asia/Jakarta')::date,   -- tanggal hari ini WIB (fix: jangan pakai current_date+at time zone)
+      (now() at time zone 'Asia/Makassar')::date,   -- tanggal hari ini WITA (fix: jangan pakai current_date+at time zone)
       interval '1 day'
     ) d
     where extract(dow from d) = 4        -- 4 = Kamis

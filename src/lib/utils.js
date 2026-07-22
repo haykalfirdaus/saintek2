@@ -13,17 +13,20 @@ export const HARI = [
 // School days: Senin (1) .. Sabtu (6). Minggu (0) is always off by default.
 export const WEEKDAY_KEYS = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu']
 
-// Return the local date in Asia/Jakarta as a { date: Date, iso, dayIndex, dayName }.
+// Zona waktu kelas — WITA (UTC+8). Ubah di sini kalau pindah zona.
+export const APP_TZ = 'Asia/Makassar'
+
+// Kembalikan tanggal lokal (WITA) sebagai { date, iso, dayIndex, dayName }.
 export function getJakartaNow() {
   const now = new Date()
-  // Convert to WIB (UTC+7) regardless of server timezone.
-  const wib = new Date(
-    now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })
+  // Konversi ke zona app apa pun timezone server-nya.
+  const local = new Date(
+    now.toLocaleString('en-US', { timeZone: APP_TZ })
   )
-  const dayIndex = wib.getDay() // 0=Minggu
+  const dayIndex = local.getDay() // 0=Minggu
   return {
-    date: wib,
-    iso: toISODate(wib),
+    date: local,
+    iso: toISODate(local),
     dayIndex,
     dayName: HARI[dayIndex],
   }

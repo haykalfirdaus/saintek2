@@ -137,18 +137,25 @@ export default async function HomePage() {
           )}
 
           {data.menunggak.length ? (
-            <ul className="card divide-y divide-border">
-              {data.menunggak.slice(0, 5).map((r) => (
-                <li key={r.student_id} className="flex items-center justify-between px-4 py-2.5">
-                  <span className="text-sm">
-                    {r.nama} <span className="text-muted-foreground">[{r.no_absen}]</span>
-                  </span>
-                  <span className="text-sm font-semibold text-destructive">
-                    {formatRupiah(r.arrears)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="card">
+              <ul className="max-h-72 divide-y divide-border overflow-y-auto">
+                {data.menunggak.map((r) => (
+                  <li key={r.student_id} className="flex items-center justify-between px-4 py-2.5">
+                    <span className="text-sm">
+                      {r.nama} <span className="text-muted-foreground">[{r.no_absen}]</span>
+                    </span>
+                    <span className="text-sm font-semibold text-destructive">
+                      {formatRupiah(r.arrears)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {data.menunggak.length > 6 && (
+                <p className="border-t border-border px-4 py-2 text-center text-xs text-muted-foreground">
+                  {data.menunggak.length} siswa menunggak — geser untuk lihat semua
+                </p>
+              )}
+            </div>
           ) : (
             <p className="card flex items-center gap-2 p-4 text-sm text-success">
               <CheckCircle2 className="h-4 w-4" /> Tidak ada tunggakan.

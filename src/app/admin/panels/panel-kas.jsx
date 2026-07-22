@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PanelHeader, Toast } from '@/components/ui-bits'
-import { formatRupiah, toISODate } from '@/lib/utils'
+import { formatRupiah, toISODate, APP_TZ } from '@/lib/utils'
 import { exportToExcel } from '@/lib/export-excel'
 import { FileDown, Lock } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-dialog'
@@ -23,7 +23,7 @@ export function PanelKas() {
   // Semua Kamis dari start_date s/d 6 bulan ke depan. Tiap item diberi nomor
   // minggu yang RESET tiap bulan (Minggu ke-1, ke-2, ...) + label bulan.
   function buildWeeks(startISO) {
-    const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }))
+    const today = new Date(new Date().toLocaleString('en-US', { timeZone: APP_TZ }))
     today.setHours(0, 0, 0, 0)
     const start = new Date((startISO || toISODate(today)) + 'T00:00:00')
     // batas akhir = 6 bulan setelah start
@@ -63,7 +63,7 @@ export function PanelKas() {
     setWeeks(list)
 
     // default: bulan berjalan kalau ada, kalau tidak bulan pertama
-    const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }))
+    const today = new Date(new Date().toLocaleString('en-US', { timeZone: APP_TZ }))
     const nowKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
     const months = [...new Set(list.map((w) => w.monthKey))]
     const initialMonth = months.includes(nowKey) ? nowKey : months[0]
@@ -148,17 +148,44 @@ export function PanelKas() {
 
   const activeWeekMeta = weeksInMonth.find((w) => w.date === activeWeek)
 
-  // Export SELURUH rekap kas ke Excel. Data TIDAK dihapus — hanya diunduh.
-  async function handleExport(scope) {
-    // scope: 'month' = bulan aktif saja, 'all' = semua minggu
-    const cols = scope === 'month' ? weeksInMonth : weeks
+  // ---- Export lanjutan (pilih minggu / range minggu / range bulan) ----
+  const [expOpen, setExpOpen] = useState(false)
+  const [expMode, setExpMode] = useState('week') // 'week' | 'rangeWeek' | 'rangeMonth'
+  const [exp, setExp] = useState({ week: '', wFrom: '', wTo: '', mFrom: '', mTo: '' })
+
+  function wLabel(w) {
+    return `${monthLabel(w.monthKey)} - Mgg ${w.weekNo} (${new Date(w.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })})`
+  }
+
+  function doAdvancedExport() {
+    if (expMode === 'week') {
+      const w = weeks.find((x) => x.date === exp.week)
+      if (!w) return notify('Pilih minggu dulu', 'error')
+      runExport([w], wLabel(w))
+    } else if (expMode === 'rangeWeek') {
+      const iFrom = weeks.findIndex((x) => x.date === exp.wFrom)
+      const iTo = weeks.findIndex((x) => x.date === exp.wTo)
+      if (iFrom < 0 || iTo < 0) return notify('Pilih minggu awal & akhir', 'error')
+      const [a, b] = iFrom <= iTo ? [iFrom, iTo] : [iTo, iFrom]
+      const cols = weeks.slice(a, b + 1)
+      runExport(cols, `${wLabel(weeks[a])} sampai ${wLabel(weeks[b])}`)
+    } else {
+      if (!exp.mFrom || !exp.mTo) return notify('Pilih bulan awal & akhir', 'error')
+      const [a, b] = exp.mFrom <= exp.mTo ? [exp.mFrom, exp.mTo] : [exp.mTo, exp.mFrom]
+      const cols = weeks.filter((w) => w.monthKey >= a && w.monthKey <= b)
+      runExport(cols, `${monthLabel(a)} sampai ${monthLabel(b)}`)
+    }
+  }
+
+  // Export inti: terima daftar kolom minggu + teks label, hasilkan file Excel.
+  // Data TIDAK dihapus — hanya diunduh.
+  async function runExport(cols, labelText) {
     if (!students.length) return notify('Belum ada siswa', 'error')
+    if (!cols.length) return notify('Rentang tidak valid', 'error')
 
     const ok = await confirm({
       title: 'Export ke Excel?',
-      message: scope === 'month'
-        ? `Unduh rekap kas bulan ${monthLabel(activeMonth)} ke Excel? Data tetap tersimpan.`
-        : 'Unduh rekap kas SEMUA minggu ke Excel? Data tetap tersimpan.',
+      message: `Unduh rekap kas (${labelText}) ke Excel? Data tetap tersimpan.`,
       confirmText: 'Ya, Unduh',
     })
     if (!ok) return
@@ -168,7 +195,7 @@ export function PanelKas() {
       { key: 'nama', label: 'Nama' },
       ...cols.map((w) => ({
         key: w.date,
-        label: `${monthLabel(w.monthKey)} - Mgg ${w.weekNo}`,
+        label: `${monthLabel(w.monthKey)} - Mgg ${w.weekNo} (${new Date(w.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })})`,
         format: (v) => (v ? 'LUNAS' : '-'),
       })),
       { key: 'total', label: 'Total Dibayar' },
@@ -186,16 +213,19 @@ export function PanelKas() {
       return row
     })
 
-    const label = scope === 'month' ? monthLabel(activeMonth).replace(' ', '-') : 'Semua-Minggu'
     exportToExcel({
-      filename: `Kas-XI-Saintek-2-${label}`,
+      filename: `Kas-XI-Saintek-2-${labelText.replace(/[^a-zA-Z0-9]+/g, '-')}`,
       sheetName: 'Kas',
-      title: `Rekap Kas Kelas XI Saintek 2 — ${scope === 'month' ? monthLabel(activeMonth) : 'Semua Minggu'}`,
+      title: `Rekap Kas Kelas XI Saintek 2 — ${labelText}`,
       columns,
       rows,
     })
     notify('File Excel diunduh')
   }
+
+  // Pilihan cepat lama
+  function exportMonth() { runExport(weeksInMonth, `Bulan ${monthLabel(activeMonth)}`) }
+  function exportAll() { runExport(weeks, 'Semua Minggu') }
 
   return (
     <div>
@@ -208,14 +238,88 @@ export function PanelKas() {
       </div>
 
       {/* Export Excel — data tetap tersimpan, hanya diunduh */}
-      <div className="mb-3 flex gap-2">
-        <button className="btn-ghost flex-1 text-sm" onClick={() => handleExport('month')}>
-          <FileDown className="h-4 w-4" /> Export Bulan Ini
+      <div className="mb-2 flex gap-2">
+        <button className="btn-ghost flex-1 text-sm" onClick={exportMonth}>
+          <FileDown className="h-4 w-4" /> Bulan Ini
         </button>
-        <button className="btn-ghost flex-1 text-sm" onClick={() => handleExport('all')}>
-          <FileDown className="h-4 w-4" /> Export Semua
+        <button className="btn-ghost flex-1 text-sm" onClick={exportAll}>
+          <FileDown className="h-4 w-4" /> Semua
+        </button>
+        <button className="btn-ghost flex-1 text-sm" onClick={() => setExpOpen((v) => !v)}>
+          <FileDown className="h-4 w-4" /> Pilih…
         </button>
       </div>
+
+      {/* Selektor export lanjutan */}
+      {expOpen && (
+        <div className="card mb-3 space-y-3 p-4">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { k: 'week', t: 'Per Minggu' },
+              { k: 'rangeWeek', t: 'Range Minggu' },
+              { k: 'rangeMonth', t: 'Range Bulan' },
+            ].map((m) => (
+              <button key={m.k} onClick={() => setExpMode(m.k)}
+                className={'rounded-lg border px-3 py-1.5 text-sm ' +
+                  (expMode === m.k ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground')}>
+                {m.t}
+              </button>
+            ))}
+          </div>
+
+          {expMode === 'week' && (
+            <div>
+              <label className="text-xs text-muted-foreground">Pilih minggu</label>
+              <select className="input-field" value={exp.week} onChange={(e) => setExp((s) => ({ ...s, week: e.target.value }))}>
+                <option value="">— pilih —</option>
+                {weeks.map((w) => <option key={w.date} value={w.date}>{wLabel(w)}</option>)}
+              </select>
+            </div>
+          )}
+
+          {expMode === 'rangeWeek' && (
+            <div className="grid grid-cols-1 gap-2">
+              <div>
+                <label className="text-xs text-muted-foreground">Dari minggu</label>
+                <select className="input-field" value={exp.wFrom} onChange={(e) => setExp((s) => ({ ...s, wFrom: e.target.value }))}>
+                  <option value="">— pilih —</option>
+                  {weeks.map((w) => <option key={w.date} value={w.date}>{wLabel(w)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Sampai minggu</label>
+                <select className="input-field" value={exp.wTo} onChange={(e) => setExp((s) => ({ ...s, wTo: e.target.value }))}>
+                  <option value="">— pilih —</option>
+                  {weeks.map((w) => <option key={w.date} value={w.date}>{wLabel(w)}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {expMode === 'rangeMonth' && (
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-muted-foreground">Dari bulan</label>
+                <select className="input-field" value={exp.mFrom} onChange={(e) => setExp((s) => ({ ...s, mFrom: e.target.value }))}>
+                  <option value="">— pilih —</option>
+                  {months.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Sampai bulan</label>
+                <select className="input-field" value={exp.mTo} onChange={(e) => setExp((s) => ({ ...s, mTo: e.target.value }))}>
+                  <option value="">— pilih —</option>
+                  {months.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+
+          <button className="btn-primary w-full" onClick={doAdvancedExport}>
+            <FileDown className="h-4 w-4" /> Download Excel
+          </button>
+        </div>
+      )}
 
       {/* Pilih Bulan */}
       <div className="mb-2">
