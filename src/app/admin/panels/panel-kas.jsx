@@ -96,7 +96,29 @@ export function PanelKas() {
 
   function notify(msg, type = 'success') { setToast({ msg, type }); setTimeout(() => setToast(null), 1500) }
 
+  // Urutan kronologis semua Kamis (ascending) — buildWeeks sudah urut naik.
+  const allWeekDates = useMemo(() => weeks.map((w) => w.date), [weeks])
+
+  // Aturan bayar berurutan PER SISWA:
+  // - boleh centang minggu ini hanya jika minggu sebelumnya (siswa itu) sudah lunas
+  // - boleh batal centang hanya jika minggu sesudahnya belum lunas (cegah bolong)
+  function lockInfo(studentId, weekDate) {
+    const idx = allWeekDates.indexOf(weekDate)
+    const prevDate = idx > 0 ? allWeekDates[idx - 1] : null
+    const nextDate = idx < allWeekDates.length - 1 ? allWeekDates[idx + 1] : null
+    const prevPaid = prevDate ? !!payments[`${studentId}|${prevDate}`] : true
+    const nextPaid = nextDate ? !!payments[`${studentId}|${nextDate}`] : false
+    return { prevPaid, nextPaid }
+  }
+
   async function toggle(studentId, checked) {
+    const { prevPaid, nextPaid } = lockInfo(studentId, activeWeek)
+    if (checked && !prevPaid) {
+      return notify('Bayar minggu sebelumnya dulu untuk siswa ini.', 'error')
+    }
+    if (!checked && nextPaid) {
+      return notify('Batalkan centang minggu setelahnya dulu.', 'error')
+    }
     const key = `${studentId}|${activeWeek}`
     setPayments((m) => ({ ...m, [key]: checked })) // optimistic
     if (checked) {
@@ -169,10 +191,25 @@ export function PanelKas() {
       <div className="card divide-y divide-border">
         {students.map((s) => {
           const checked = !!payments[`${s.id}|${activeWeek}`]
+          const { prevPaid, nextPaid } = lockInfo(s.id, activeWeek)
+          // terkunci: belum boleh centang (minggu lalu nunggak) ATAU
+          //           belum boleh batal (minggu depan sudah lunas)
+          const locked = !activeWeek || (!checked && !prevPaid) || (checked && nextPaid)
           return (
-            <label key={s.id} className="flex cursor-pointer items-center justify-between px-4 py-3">
-              <span className="text-sm">{s.no_absen}. {s.nama}</span>
-              <input type="checkbox" checked={checked} disabled={!activeWeek}
+            <label
+              key={s.id}
+              className={
+                'flex items-center justify-between px-4 py-3 ' +
+                (locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer')
+              }
+            >
+              <span className="text-sm">
+                {s.no_absen}. {s.nama}
+                {!checked && !prevPaid && (
+                  <span className="ml-2 text-[11px] text-muted-foreground">🔒 nunggak minggu lalu</span>
+                )}
+              </span>
+              <input type="checkbox" checked={checked} disabled={locked}
                 onChange={(e) => toggle(s.id, e.target.checked)}
                 className="h-6 w-6 accent-[hsl(var(--primary))]" />
             </label>
