@@ -16,7 +16,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-export const dynamic = 'force-dynamic'
+// ISR: cache halaman & revalidate tiap 30 detik → navigasi instan, data tetap fresh.
+export const revalidate = 30
 
 export default async function HomePage() {
   const data = await getLandingData()

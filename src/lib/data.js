@@ -1,9 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { getJakartaNow, dayKeyFromIndex } from '@/lib/utils'
 
 // Aggregate everything the landing page needs, in one server-side pass.
+// Pakai public client (tanpa cookie) supaya hasilnya bisa di-cache/ISR.
 export async function getLandingData() {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const now = getJakartaNow()
   const dayKey = dayKeyFromIndex(now.dayIndex) // null on Minggu
 

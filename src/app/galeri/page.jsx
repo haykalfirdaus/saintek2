@@ -2,13 +2,13 @@ import { BottomNav } from '@/components/bottom-nav'
 import { GallerySlider } from '@/components/gallery-slider'
 import { UploadFotoButton } from '@/components/upload-foto-button'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { Images } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 30
 
 export default async function GaleriPage() {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data: photos } = await supabase
     .from('gallery')
     .select('*')

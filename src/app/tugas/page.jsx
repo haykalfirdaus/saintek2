@@ -2,13 +2,13 @@ import { BottomNav } from '@/components/bottom-nav'
 import { TaskCard } from '@/components/task-card'
 import { UploadFotoButton } from '@/components/upload-foto-button'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { ClipboardList } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 30
 
 export default async function TugasPage() {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data: aktif } = await supabase
     .from('tasks').select('*').eq('is_active', true)
     .order('created_at', { ascending: false })

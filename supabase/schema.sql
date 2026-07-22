@@ -164,8 +164,8 @@ create policy "tasks public read" on public.tasks for select using (true);
 
 drop policy if exists "tasks admin write" on public.tasks;
 create policy "tasks admin write" on public.tasks
-  for all using (public.current_role() in ('developer','sekretaris'))
-  with check (public.current_role() in ('developer','sekretaris'));
+  for all using (public.current_role() in ('developer','sekretaris','ketua'))
+  with check (public.current_role() in ('developer','sekretaris','ketua'));
 
 -- =============================================================
 --  PENGUMUMAN  (biasa + popup besar)

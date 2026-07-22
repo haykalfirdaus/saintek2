@@ -1,13 +1,13 @@
 import { BottomNav } from '@/components/bottom-nav'
 import { KasClient } from './kas-client'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { Wallet } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 30
 
 export default async function KasPage() {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data: arrears } = await supabase.rpc('kas_arrears')
 
   return (

@@ -30,7 +30,7 @@ export const ROLE_CAPS = {
   },
   ketua: {
     siswa: true, piket: true, mapel: true, libur: true,
-    tugas: false, kas: false, pengumuman: true, popup: false, akun: false, galeri: false,
+    tugas: true, kas: false, pengumuman: true, popup: false, akun: false, galeri: false,
   },
 }
 
