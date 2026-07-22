@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CalendarDays } from 'lucide-react'
+import { CalendarDays, Palmtree } from 'lucide-react'
 import { formatTanggalLengkap, getJakartaNow } from '@/lib/utils'
 import { ThemeToggle } from './theme-toggle'
 
@@ -38,8 +38,8 @@ export function LiveHeader({ mapelHariIni = [], libur = null }) {
 
         <div className="mt-3">
           {isLibur ? (
-            <div className="rounded-lg border border-border bg-muted px-3 py-2 text-sm font-semibold text-muted-foreground">
-              🏖️ Sedang Libur
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm font-semibold text-muted-foreground">
+              <Palmtree className="h-4 w-4" /> Sedang Libur
               {libur?.keterangan ? ` — ${libur.keterangan}` : isMinggu ? ' (Minggu)' : ''}
             </div>
           ) : (

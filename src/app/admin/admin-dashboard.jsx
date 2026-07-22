@@ -7,7 +7,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { ConfirmProvider } from '@/components/confirm-dialog'
 import {
   Users, Brush, BookOpen, CalendarOff, ClipboardList, Wallet,
-  Megaphone, MonitorSmartphone, KeyRound, LogOut, ShieldCheck, Images,
+  Megaphone, MonitorSmartphone, KeyRound, LogOut, ShieldCheck, Images, AlertTriangle,
 } from 'lucide-react'
 
 import { PanelSiswa } from './panels/panel-siswa'
@@ -65,8 +65,8 @@ export function AdminDashboard({ role, name }) {
 
         {/* Bendahara wajib banner */}
         {role === 'bendahara' && (
-          <div className="mx-4 mb-3 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
-            ⚠️ PERINGATAN: Harus tetap catat manual di buku untuk keamanan data!
+          <div className="mx-4 mb-3 flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
+            <AlertTriangle className="h-4 w-4 shrink-0" /> PERINGATAN: Harus tetap catat manual di buku untuk keamanan data!
           </div>
         )}
 

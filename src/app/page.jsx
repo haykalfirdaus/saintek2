@@ -14,6 +14,8 @@ import {
   Wallet,
   Images,
   ArrowRight,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -44,7 +46,7 @@ export default async function HomePage() {
               ))}
             </div>
           ) : (
-            <p className="card p-4 text-sm text-muted-foreground">Tidak ada tugas aktif. 🎉</p>
+            <p className="card p-4 text-sm text-muted-foreground">Tidak ada tugas aktif.</p>
           )}
         </section>
 
@@ -101,10 +103,39 @@ export default async function HomePage() {
         <section>
           <div className="section-title justify-between">
             <span className="flex items-center gap-2">
-              <Wallet className="h-4 w-4" /> Menunggak Kas
+              <Wallet className="h-4 w-4" /> Kas Kelas
             </span>
             <Link href="/kas" className="text-primary">Detail</Link>
           </div>
+
+          {/* Ringkasan status minggu berjalan */}
+          <div className="mb-3 grid grid-cols-2 gap-3">
+            <div className="card flex items-center gap-3 p-3">
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-success/15 text-success">
+                <CheckCircle2 className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-lg font-bold leading-none">{data.kasSummary.sudahLunas}</p>
+                <p className="text-xs text-muted-foreground">Sudah bayar</p>
+              </div>
+            </div>
+            <div className="card flex items-center gap-3 p-3">
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-destructive/15 text-destructive">
+                <XCircle className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-lg font-bold leading-none">{data.kasSummary.belumLunas}</p>
+                <p className="text-xs text-muted-foreground">Belum bayar</p>
+              </div>
+            </div>
+          </div>
+
+          {!data.kasSummary.currentWeek && (
+            <p className="mb-3 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+              Kas belum mulai ditagih.
+            </p>
+          )}
+
           {data.menunggak.length ? (
             <ul className="card divide-y divide-border">
               {data.menunggak.slice(0, 5).map((r) => (
@@ -119,7 +150,9 @@ export default async function HomePage() {
               ))}
             </ul>
           ) : (
-            <p className="card p-4 text-sm text-success">Semua lunas! 🎉</p>
+            <p className="card flex items-center gap-2 p-4 text-sm text-success">
+              <CheckCircle2 className="h-4 w-4" /> Tidak ada tunggakan.
+            </p>
           )}
         </section>
 

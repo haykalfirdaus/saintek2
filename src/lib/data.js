@@ -81,6 +81,37 @@ export async function getLandingData() {
   const { data: arrears } = await supabase.rpc('kas_arrears')
   const menunggak = (arrears ?? []).filter((r) => r.arrears > 0)
 
+  // Ringkasan status kas untuk minggu berjalan (Kamis terkini).
+  const { data: kasSetting } = await supabase
+    .from('kas_settings').select('start_date').eq('id', 1).maybeSingle()
+  const { data: kasPay } = await supabase
+    .from('kas_payments').select('student_id, week_date').eq('paid', true)
+
+  // Kamis terakhir yang sudah lewat sejak start_date (null kalau kas belum mulai).
+  let currentWeek = null
+  {
+    const start = new Date((kasSetting?.start_date || now.iso) + 'T00:00:00')
+    const cur = new Date(now.date); cur.setHours(0, 0, 0, 0)
+    while (cur.getDay() !== 4) cur.setDate(cur.getDate() - 1)
+    if (cur >= start) {
+      const y = cur.getFullYear(), m = String(cur.getMonth() + 1).padStart(2, '0'), d = String(cur.getDate()).padStart(2, '0')
+      currentWeek = `${y}-${m}-${d}`
+    }
+  }
+  const totalSiswa = (arrears ?? []).length
+  let sudahLunas = 0
+  if (currentWeek) {
+    const paidSet = new Set((kasPay ?? []).filter((p) => p.week_date === currentWeek).map((p) => p.student_id))
+    sudahLunas = (arrears ?? []).filter((r) => paidSet.has(r.student_id)).length
+  }
+  const kasSummary = {
+    currentWeek,
+    totalSiswa,
+    sudahLunas,
+    belumLunas: totalSiswa - sudahLunas,
+    totalTunggakan: (arrears ?? []).reduce((s, r) => s + (r.arrears || 0), 0),
+  }
+
   // Galeri untuk slideshow singkat
   const { data: galeri } = await supabase
     .from('gallery')
@@ -97,6 +128,7 @@ export async function getLandingData() {
     pengumuman: pengumumanAktif,
     popup,
     menunggak,
+    kasSummary,
     galeri: galeri ?? [],
   }
 }

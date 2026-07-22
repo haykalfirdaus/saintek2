@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { PanelHeader, Toast } from '@/components/ui-bits'
 import { formatRupiah, toISODate } from '@/lib/utils'
 import { exportToExcel } from '@/lib/export-excel'
-import { FileDown } from 'lucide-react'
+import { FileDown, Lock } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-dialog'
 
 // UI Absensi Kas: checkbox per siswa per minggu (Kamis). Rekap 1 bulan terakhir.
@@ -269,7 +269,9 @@ export function PanelKas() {
               <span className="text-sm">
                 {s.no_absen}. {s.nama}
                 {!checked && !prevPaid && (
-                  <span className="ml-2 text-[11px] text-muted-foreground">🔒 nunggak minggu lalu</span>
+                  <span className="ml-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <Lock className="h-3 w-3" /> nunggak minggu lalu
+                  </span>
                 )}
               </span>
               <input type="checkbox" checked={checked} disabled={locked}
