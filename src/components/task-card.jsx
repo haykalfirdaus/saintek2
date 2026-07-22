@@ -2,11 +2,11 @@ import { Clock, CalendarRange } from 'lucide-react'
 
 function fmt(dt) {
   if (!dt) return null
-  return new Date(dt).toLocaleString('id-ID', {
+  // Tanggal saja, tanpa jam.
+  return new Date(dt).toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: 'numeric',
   })
 }
 

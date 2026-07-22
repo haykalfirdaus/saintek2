@@ -37,8 +37,9 @@ export function PanelTugas() {
         isi: form.isi.trim() || null,
         photo_url,
         deadline_type: form.deadline_type,
-        deadline_start: form.deadline_type === 'range' && form.deadline_start ? new Date(form.deadline_start).toISOString() : null,
-        deadline_end: form.deadline_end ? new Date(form.deadline_end).toISOString() : null,
+        // Simpan sebagai tanggal (jam 12 siang WIB) agar tidak bergeser zona waktu.
+        deadline_start: form.deadline_type === 'range' && form.deadline_start ? new Date(form.deadline_start + 'T12:00:00').toISOString() : null,
+        deadline_end: form.deadline_end ? new Date(form.deadline_end + 'T12:00:00').toISOString() : null,
         is_active: true,
       }
       const { error } = await supabase.from('tasks').insert(payload)
@@ -81,31 +82,31 @@ export function PanelTugas() {
           <Camera className="h-4 w-4" /> {file ? file.name : 'Lampirkan Foto (kamera/galeri)'}
         </button>
 
-        {/* Deadline radio */}
+        {/* Deadline radio — tanggal saja, tanpa jam */}
         <div className="rounded-lg border border-border p-3">
           <p className="mb-2 text-sm font-medium">Deadline</p>
           <label className="mb-2 flex items-center gap-2 text-sm">
             <input type="radio" name="dl" checked={form.deadline_type === 'exact'}
               onChange={() => setForm((f) => ({ ...f, deadline_type: 'exact' }))} />
-            Jam Pasti
+            Tanggal Pasti
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="radio" name="dl" checked={form.deadline_type === 'range'}
               onChange={() => setForm((f) => ({ ...f, deadline_type: 'range' }))} />
-            Range Waktu
+            Rentang Tanggal
           </label>
 
           <div className="mt-3 space-y-2">
             {form.deadline_type === 'range' && (
               <div>
                 <label className="text-xs text-muted-foreground">Mulai</label>
-                <input type="datetime-local" className="input-field" value={form.deadline_start}
+                <input type="date" className="input-field" value={form.deadline_start}
                   onChange={(e) => setForm((f) => ({ ...f, deadline_start: e.target.value }))} />
               </div>
             )}
             <div>
               <label className="text-xs text-muted-foreground">{form.deadline_type === 'range' ? 'Selesai' : 'Deadline'}</label>
-              <input type="datetime-local" className="input-field" value={form.deadline_end}
+              <input type="date" className="input-field" value={form.deadline_end}
                 onChange={(e) => setForm((f) => ({ ...f, deadline_end: e.target.value }))} />
             </div>
           </div>
