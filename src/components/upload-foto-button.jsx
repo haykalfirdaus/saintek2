@@ -29,14 +29,19 @@ export function UploadFotoButton({
     try {
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue
-        const ext = file.name.split('.').pop() || 'jpg'
-        // No Date/random needed for uniqueness — use performance-safe token.
+        // Build a clean key from the MIME type — never trust file.name (camera
+        // uploads on mobile can have empty/odd names → "Invalid path" errors).
+        const ext = (file.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')
         const rand = Math.random().toString(36).slice(2)
-        const path = `public/${rand}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+        const path = `public/${rand}.${ext}`
 
         const { error: upErr } = await supabase.storage
           .from(bucket)
-          .upload(path, file, { cacheControl: '3600', upsert: false })
+          .upload(path, file, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: file.type,
+          })
         if (upErr) throw upErr
 
         const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path)
