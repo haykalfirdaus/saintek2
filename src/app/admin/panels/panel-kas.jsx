@@ -14,26 +14,34 @@ export function PanelKas() {
   const [activeWeek, setActiveWeek] = useState('')
   const [toast, setToast] = useState(null)
 
-  // Build the list of billing Thursdays FROM start_date FORWARD to today.
-  // Minggu sebelum kas dimulai tidak ditampilkan. Terbaru tampil paling depan.
+  const [activeMonth, setActiveMonth] = useState('') // 'YYYY-MM'
+
+  // Semua Kamis dari start_date s/d 6 bulan ke depan. Tiap item diberi nomor
+  // minggu yang RESET tiap bulan (Minggu ke-1, ke-2, ...) + label bulan.
   function buildWeeks(startISO) {
     const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }))
     today.setHours(0, 0, 0, 0)
-    const cur = new Date((startISO || toISODate(today)) + 'T00:00:00')
-    // maju ke Kamis pertama pada/sesudah start_date
-    while (cur.getDay() !== 4) cur.setDate(cur.getDate() + 1)
+    const start = new Date((startISO || toISODate(today)) + 'T00:00:00')
+    // batas akhir = 6 bulan setelah start
+    const end = new Date(start)
+    end.setMonth(end.getMonth() + 6)
+
+    const cur = new Date(start)
+    while (cur.getDay() !== 4) cur.setDate(cur.getDate() + 1) // Kamis pertama
+
     const list = []
-    while (cur <= today) {
-      list.push(toISODate(cur))
+    const perMonthCount = {} // 'YYYY-MM' -> nomor minggu berjalan
+    while (cur <= end) {
+      const monthKey = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`
+      perMonthCount[monthKey] = (perMonthCount[monthKey] || 0) + 1
+      list.push({
+        date: toISODate(cur),
+        monthKey,
+        weekNo: perMonthCount[monthKey], // reset tiap bulan
+      })
       cur.setDate(cur.getDate() + 7)
     }
-    // kalau start_date jatuh setelah Kamis terakhir (belum ada tagihan), tetap tampilkan Kamis terdekat
-    if (!list.length) {
-      const k = new Date((startISO || toISODate(today)) + 'T00:00:00')
-      while (k.getDay() !== 4) k.setDate(k.getDate() + 1)
-      list.push(toISODate(k))
-    }
-    return list.reverse() // terbaru dulu
+    return list
   }
 
   async function load() {
@@ -49,9 +57,42 @@ export function PanelKas() {
 
     const list = buildWeeks(setting?.start_date)
     setWeeks(list)
-    setActiveWeek((prev) => (prev && list.includes(prev) ? prev : list[0]))
+
+    // default: bulan berjalan kalau ada, kalau tidak bulan pertama
+    const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }))
+    const nowKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+    const months = [...new Set(list.map((w) => w.monthKey))]
+    const initialMonth = months.includes(nowKey) ? nowKey : months[0]
+    setActiveMonth((prev) => (prev && months.includes(prev) ? prev : initialMonth))
+
+    const inMonth = list.filter((w) => w.monthKey === (activeMonth || initialMonth))
+    setActiveWeek((prev) =>
+      prev && inMonth.some((w) => w.date === prev) ? prev : inMonth[0]?.date || ''
+    )
   }
   useEffect(() => { load() }, [])
+
+  // daftar bulan unik + minggu untuk bulan yang aktif
+  const months = useMemo(() => [...new Set(weeks.map((w) => w.monthKey))], [weeks])
+  const weeksInMonth = useMemo(
+    () => weeks.filter((w) => w.monthKey === activeMonth),
+    [weeks, activeMonth]
+  )
+
+  function monthLabel(key) {
+    if (!key) return ''
+    const [y, m] = key.split('-')
+    return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('id-ID', {
+      month: 'long', year: 'numeric',
+    })
+  }
+
+  // saat ganti bulan, pilih minggu pertama bulan itu
+  function selectMonth(key) {
+    setActiveMonth(key)
+    const first = weeks.find((w) => w.monthKey === key)
+    if (first) setActiveWeek(first.date)
+  }
 
   function notify(msg, type = 'success') { setToast({ msg, type }); setTimeout(() => setToast(null), 1500) }
 
@@ -70,14 +111,16 @@ export function PanelKas() {
     }
   }
 
+  // Rekap bulan aktif: total terkumpul dari semua minggu di bulan yang dipilih.
   const rekap = useMemo(() => {
-    // Rekap 1 bulan terakhir: total terkumpul dari ~4 Kamis terbaru saja.
     let total = 0
-    for (const w of weeks.slice(0, 4)) {
-      for (const s of students) if (payments[`${s.id}|${w}`]) total += 5000
+    for (const w of weeksInMonth) {
+      for (const s of students) if (payments[`${s.id}|${w.date}`]) total += 5000
     }
     return total
-  }, [weeks, students, payments])
+  }, [weeksInMonth, students, payments])
+
+  const activeWeekMeta = weeksInMonth.find((w) => w.date === activeWeek)
 
   return (
     <div>
@@ -85,20 +128,43 @@ export function PanelKas() {
       <Toast {...(toast || {})} />
 
       <div className="card mb-3 p-4">
-        <p className="text-sm text-muted-foreground">Rekap 1 bulan terakhir (terkumpul)</p>
+        <p className="text-sm text-muted-foreground">Terkumpul bulan {monthLabel(activeMonth)}</p>
         <p className="text-2xl font-bold text-success">{formatRupiah(rekap)}</p>
       </div>
 
-      {/* Pilih minggu (Kamis) */}
-      <div className="no-scrollbar mb-3 flex gap-2 overflow-x-auto">
-        {weeks.map((w) => (
-          <button key={w} onClick={() => setActiveWeek(w)}
-            className={'shrink-0 rounded-lg border px-3 py-2 text-sm ' +
-              (activeWeek === w ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground')}>
-            {new Date(w + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-          </button>
-        ))}
+      {/* Pilih Bulan */}
+      <div className="mb-2">
+        <p className="mb-1 text-xs font-medium text-muted-foreground">Bulan</p>
+        <div className="no-scrollbar flex gap-2 overflow-x-auto">
+          {months.map((m) => (
+            <button key={m} onClick={() => selectMonth(m)}
+              className={'shrink-0 rounded-lg border px-3 py-2 text-sm ' +
+                (activeMonth === m ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground')}>
+              {monthLabel(m)}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Pilih Minggu (reset tiap bulan) */}
+      <div className="mb-3">
+        <p className="mb-1 text-xs font-medium text-muted-foreground">Minggu</p>
+        <div className="no-scrollbar flex gap-2 overflow-x-auto">
+          {weeksInMonth.map((w) => (
+            <button key={w.date} onClick={() => setActiveWeek(w.date)}
+              className={'shrink-0 rounded-lg border px-3 py-2 text-sm ' +
+                (activeWeek === w.date ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground')}>
+              Minggu ke-{w.weekNo}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeWeekMeta && (
+        <p className="mb-2 text-xs text-muted-foreground">
+          Kamis, {new Date(activeWeek + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+        </p>
+      )}
 
       <div className="card divide-y divide-border">
         {students.map((s) => {
@@ -106,7 +172,7 @@ export function PanelKas() {
           return (
             <label key={s.id} className="flex cursor-pointer items-center justify-between px-4 py-3">
               <span className="text-sm">{s.no_absen}. {s.nama}</span>
-              <input type="checkbox" checked={checked}
+              <input type="checkbox" checked={checked} disabled={!activeWeek}
                 onChange={(e) => toggle(s.id, e.target.checked)}
                 className="h-6 w-6 accent-[hsl(var(--primary))]" />
             </label>
