@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
 import { ROLE_LABEL } from '@/lib/roles'
-import { UserPlus, KeyRound } from 'lucide-react'
+import { UserPlus, KeyRound, Trash2 } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-dialog'
 
 // Manajemen Akun (developer): buat admin & ganti password tanpa verifikasi email.
@@ -17,12 +17,16 @@ export function PanelAkun() {
 
   const [create, setCreate] = useState({ email: '', password: '', full_name: '', role: 'sekretaris' })
   const [pw, setPw] = useState({}) // userId -> new password
+  const [currentId, setCurrentId] = useState(null)
 
   async function load() {
     const { data } = await supabase.from('profiles').select('*').order('created_at')
     setAdmins(data ?? [])
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    supabase.auth.getUser().then(({ data }) => setCurrentId(data?.user?.id ?? null))
+  }, [])
   function notify(msg, type = 'success') { setToast({ msg, type }); setTimeout(() => setToast(null), 3000) }
 
   async function callApi(action, body) {
@@ -79,6 +83,17 @@ export function PanelAkun() {
     catch (e) { notify(e.message, 'error') }
   }
 
+  async function deleteAccount(userId, nama) {
+    const ok = await confirm({
+      title: 'Hapus Akun?',
+      message: `Hapus akun "${nama}" permanen? Akun tidak bisa login lagi & tidak bisa dikembalikan.`,
+      danger: true, confirmText: 'Ya, Hapus',
+    })
+    if (!ok) return
+    try { await callApi('delete', { userId }); notify('Akun dihapus'); load() }
+    catch (e) { notify(e.message, 'error') }
+  }
+
   return (
     <div>
       <PanelHeader title="Manajemen Akun" desc="Buat admin & ganti password langsung (tanpa verifikasi email)." />
@@ -117,9 +132,17 @@ export function PanelAkun() {
             <div className="flex gap-2">
               <input className="input-field py-2 text-sm" placeholder="Password baru"
                 value={pw[a.id] || ''} onChange={(e) => setPw((p) => ({ ...p, [a.id]: e.target.value }))} />
-              <button className="btn-primary px-3" onClick={() => changePassword(a.id, a.full_name)}>
+              <button className="btn-primary px-3" onClick={() => changePassword(a.id, a.full_name)} title="Ganti password">
                 <KeyRound className="h-4 w-4" />
               </button>
+              {a.id !== currentId && (
+                <button
+                  className="grid min-h-[44px] w-11 place-items-center rounded-lg border border-destructive/40 text-destructive transition active:scale-95 hover:bg-destructive/10"
+                  onClick={() => deleteAccount(a.id, a.full_name)} title="Hapus akun"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
         ))}

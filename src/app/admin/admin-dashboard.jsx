@@ -41,7 +41,7 @@ export function AdminDashboard({ role, name }) {
 
   return (
     <ConfirmProvider>
-    <div className="mx-auto min-h-dvh w-full max-w-2xl overflow-x-hidden pb-10">
+    <div className="mx-auto min-h-dvh w-full max-w-2xl pb-10">
       <header className="pt-safe sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-lg">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">

@@ -72,8 +72,10 @@
   html,
   body {
     @apply bg-background text-foreground antialiased;
-    /* Cegah geser horizontal keluar layar di HP */
-    overflow-x: hidden;
+    /* Cegah geser horizontal keluar layar di HP.
+       'clip' (bukan 'hidden') agar tidak membuat scroll-container yang
+       merusak posisi sticky header & bikin tombol "terhalang". */
+    overflow-x: clip;
     max-width: 100%;
   }
 

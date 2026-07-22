@@ -57,6 +57,18 @@ export async function POST(request) {
       return NextResponse.json({ ok: true })
     }
 
+    if (body.action === 'delete') {
+      const { userId } = body
+      // cegah developer menghapus dirinya sendiri
+      if (userId === user.id) {
+        return NextResponse.json({ error: 'Tidak bisa menghapus akun sendiri.' }, { status: 400 })
+      }
+      // hapus user di Auth (profil ikut terhapus via ON DELETE CASCADE)
+      const { error } = await admin.auth.admin.deleteUser(userId)
+      if (error) throw error
+      return NextResponse.json({ ok: true })
+    }
+
     return NextResponse.json({ error: 'Aksi tidak dikenal' }, { status: 400 })
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 400 })
