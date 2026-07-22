@@ -302,7 +302,7 @@ language sql stable security definer set search_path = public as $$
     from public.kas_payments where paid = true
     group by student_id
   ) p on p.student_id = st.id
-  order by arrears desc, st.no_absen asc;
+  order by 6 desc, 3 asc;   -- kolom 6 = arrears, kolom 3 = no_absen
 $$;
 
 -- =============================================================
