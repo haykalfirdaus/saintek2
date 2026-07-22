@@ -18,19 +18,19 @@ export const ROLE_LABEL = {
 export const ROLE_CAPS = {
   developer: {
     siswa: true, piket: true, mapel: true, libur: true,
-    tugas: true, kas: true, pengumuman: true, popup: true, akun: true,
+    tugas: true, kas: true, pengumuman: true, popup: true, akun: true, galeri: true,
   },
   sekretaris: {
     siswa: true, piket: true, mapel: true, libur: true,
-    tugas: true, kas: false, pengumuman: false, popup: false, akun: false,
+    tugas: true, kas: false, pengumuman: false, popup: false, akun: false, galeri: false,
   },
   bendahara: {
     siswa: false, piket: false, mapel: false, libur: false,
-    tugas: false, kas: true, pengumuman: true, popup: false, akun: false,
+    tugas: false, kas: true, pengumuman: true, popup: false, akun: false, galeri: false,
   },
   ketua: {
     siswa: true, piket: true, mapel: true, libur: true,
-    tugas: false, kas: false, pengumuman: true, popup: false, akun: false,
+    tugas: false, kas: false, pengumuman: true, popup: false, akun: false, galeri: false,
   },
 }
 

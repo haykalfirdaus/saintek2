@@ -6,7 +6,7 @@ import { ROLE_LABEL, can } from '@/lib/roles'
 import { ThemeToggle } from '@/components/theme-toggle'
 import {
   Users, Brush, BookOpen, CalendarOff, ClipboardList, Wallet,
-  Megaphone, MonitorSmartphone, KeyRound, LogOut, ShieldCheck,
+  Megaphone, MonitorSmartphone, KeyRound, LogOut, ShieldCheck, Images,
 } from 'lucide-react'
 
 import { PanelSiswa } from './panels/panel-siswa'
@@ -18,6 +18,7 @@ import { PanelKas } from './panels/panel-kas'
 import { PanelPengumuman } from './panels/panel-pengumuman'
 import { PanelPopup } from './panels/panel-popup'
 import { PanelAkun } from './panels/panel-akun'
+import { PanelGaleri } from './panels/panel-galeri'
 
 const TABS = [
   { key: 'siswa', label: 'Siswa', icon: Users, cap: 'siswa', C: PanelSiswa },
@@ -28,6 +29,7 @@ const TABS = [
   { key: 'kas', label: 'Kas', icon: Wallet, cap: 'kas', C: PanelKas },
   { key: 'pengumuman', label: 'Pengumuman', icon: Megaphone, cap: 'pengumuman', C: PanelPengumuman },
   { key: 'popup', label: 'Popup Besar', icon: MonitorSmartphone, cap: 'popup', C: PanelPopup },
+  { key: 'galeri', label: 'Kelola Galeri', icon: Images, cap: 'galeri', C: PanelGaleri },
   { key: 'akun', label: 'Akun Admin', icon: KeyRound, cap: 'akun', C: PanelAkun },
 ]
 
