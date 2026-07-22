@@ -3,11 +3,18 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 /*
-  Developer-only account management. Uses the service-role key server-side to:
-    - create   : buat user admin baru (email confirm otomatis)
+  Account management via service-role key (server-side).
+
+  Self-service (semua role, hanya untuk akun sendiri):
+    - update_self : ganti email dan/atau password akun sendiri TANPA verifikasi email
+
+  Developer-only (kelola admin lain):
+    - create       : buat user admin baru (email confirm otomatis)
     - set_password : ganti password admin lain TANPA verifikasi email
-    - set_role : ubah role admin
-  Otorisasi: verifikasi caller adalah 'developer' via RLS-backed profiles read.
+    - set_email    : ganti email admin lain TANPA verifikasi email
+    - set_role     : ubah role admin
+    - delete       : hapus akun admin
+  Otorisasi: verifikasi caller via RLS-backed profiles read.
 */
 export async function POST(request) {
   const supabase = await createClient()
@@ -16,19 +23,51 @@ export async function POST(request) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
-  if (me?.role !== 'developer') {
-    return NextResponse.json({ error: 'Hanya developer.' }, { status: 403 })
-  }
-
   const body = await request.json()
   const admin = createAdminClient()
 
   try {
+    // --- Self-service: berlaku untuk semua role, hanya akun sendiri ---
+    if (body.action === 'update_self') {
+      const { email, password } = body
+      const patch = {}
+      if (email) { patch.email = email; patch.email_confirm = true }
+      if (password) {
+        if (String(password).length < 6) {
+          return NextResponse.json({ error: 'Password minimal 6 karakter.' }, { status: 400 })
+        }
+        patch.password = password
+      }
+      if (!patch.email && !patch.password) {
+        return NextResponse.json({ error: 'Tidak ada perubahan.' }, { status: 400 })
+      }
+      const { error } = await admin.auth.admin.updateUserById(user.id, patch)
+      if (error) throw error
+      return NextResponse.json({ ok: true })
+    }
+
+    // --- Aksi berikut khusus developer ---
+    const { data: me } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (me?.role !== 'developer') {
+      return NextResponse.json({ error: 'Hanya developer.' }, { status: 403 })
+    }
+
+    if (body.action === 'list') {
+      // Gabungkan profiles dengan email dari auth.users.
+      const { data: profiles } = await admin
+        .from('profiles')
+        .select('*')
+        .order('created_at')
+      const { data: authList } = await admin.auth.admin.listUsers({ perPage: 1000 })
+      const emailById = new Map((authList?.users ?? []).map((u) => [u.id, u.email]))
+      const admins = (profiles ?? []).map((p) => ({ ...p, email: emailById.get(p.id) ?? '' }))
+      return NextResponse.json({ ok: true, admins })
+    }
+
     if (body.action === 'create') {
       const { email, password, full_name, role } = body
       const { data, error } = await admin.auth.admin.createUser({
@@ -46,6 +85,17 @@ export async function POST(request) {
     if (body.action === 'set_password') {
       const { userId, password } = body
       const { error } = await admin.auth.admin.updateUserById(userId, { password })
+      if (error) throw error
+      return NextResponse.json({ ok: true })
+    }
+
+    if (body.action === 'set_email') {
+      const { userId, email } = body
+      if (!email) return NextResponse.json({ error: 'Email wajib.' }, { status: 400 })
+      const { error } = await admin.auth.admin.updateUserById(userId, {
+        email,
+        email_confirm: true,
+      })
       if (error) throw error
       return NextResponse.json({ ok: true })
     }

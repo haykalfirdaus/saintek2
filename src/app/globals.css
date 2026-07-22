@@ -67,6 +67,9 @@
 
   html {
     -webkit-tap-highlight-color: transparent;
+    /* Perkecil semua font secara proporsional (Tailwind pakai rem).
+       Default 16px -> 15px. */
+    font-size: 93.75%;
   }
 
   html,

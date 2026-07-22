@@ -7,7 +7,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { ConfirmProvider } from '@/components/confirm-dialog'
 import {
   Users, Brush, BookOpen, CalendarOff, ClipboardList, Wallet,
-  Megaphone, MonitorSmartphone, KeyRound, LogOut, ShieldCheck, Images, AlertTriangle,
+  Megaphone, MonitorSmartphone, KeyRound, LogOut, ShieldCheck, Images, AlertTriangle, UserCog,
 } from 'lucide-react'
 
 import { PanelSiswa } from './panels/panel-siswa'
@@ -19,6 +19,7 @@ import { PanelKas } from './panels/panel-kas'
 import { PanelPengumuman } from './panels/panel-pengumuman'
 import { PanelPopup } from './panels/panel-popup'
 import { PanelAkun } from './panels/panel-akun'
+import { PanelAkunSaya } from './panels/panel-akun-saya'
 import { PanelGaleri } from './panels/panel-galeri'
 
 const TABS = [
@@ -32,6 +33,7 @@ const TABS = [
   { key: 'popup', label: 'Popup Besar', icon: MonitorSmartphone, cap: 'popup', C: PanelPopup },
   { key: 'galeri', label: 'Kelola Galeri', icon: Images, cap: 'galeri', C: PanelGaleri },
   { key: 'akun', label: 'Akun Admin', icon: KeyRound, cap: 'akun', C: PanelAkun },
+  { key: 'akun_saya', label: 'Akun Saya', icon: UserCog, cap: 'akun_saya', C: PanelAkunSaya },
 ]
 
 export function AdminDashboard({ role, name }) {

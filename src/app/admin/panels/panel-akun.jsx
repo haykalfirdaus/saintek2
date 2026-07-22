@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
 import { ROLE_LABEL } from '@/lib/roles'
-import { UserPlus, KeyRound, Trash2 } from 'lucide-react'
+import { UserPlus, KeyRound, Trash2, Mail } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-dialog'
 
-// Manajemen Akun (developer): buat admin & ganti password tanpa verifikasi email.
+// Manajemen Akun (developer): buat admin, ganti email & password tanpa verifikasi email.
 export function PanelAkun() {
   const supabase = createClient()
   const confirm = useConfirm()
@@ -17,11 +17,18 @@ export function PanelAkun() {
 
   const [create, setCreate] = useState({ email: '', password: '', full_name: '', role: 'sekretaris' })
   const [pw, setPw] = useState({}) // userId -> new password
+  const [emailEdit, setEmailEdit] = useState({}) // userId -> new email
   const [currentId, setCurrentId] = useState(null)
 
   async function load() {
-    const { data } = await supabase.from('profiles').select('*').order('created_at')
-    setAdmins(data ?? [])
+    // Ambil daftar admin + email via API (email tersimpan di auth.users).
+    try {
+      const { admins } = await callApi('list', {})
+      setAdmins(admins ?? [])
+    } catch {
+      const { data } = await supabase.from('profiles').select('*').order('created_at')
+      setAdmins(data ?? [])
+    }
   }
   useEffect(() => {
     load()
@@ -73,6 +80,23 @@ export function PanelAkun() {
     } catch (e) { notify(e.message, 'error') } finally { setLoading(false) }
   }
 
+  async function changeEmail(userId, nama) {
+    const email = (emailEdit[userId] || '').trim()
+    if (!email || !email.includes('@')) return notify('Email tidak valid', 'error')
+    const ok = await confirm({
+      title: 'Ganti Email?',
+      message: `Ganti email untuk ${nama} menjadi ${email}?`,
+      confirmText: 'Ya, Ganti',
+    })
+    if (!ok) return
+    setLoading(true)
+    try {
+      await callApi('set_email', { userId, email })
+      setEmailEdit((p) => ({ ...p, [userId]: '' }))
+      notify('Email diganti'); load()
+    } catch (e) { notify(e.message, 'error') } finally { setLoading(false) }
+  }
+
   async function changeRole(userId, role, nama) {
     const ok = await confirm({
       title: 'Ubah Role?',
@@ -120,14 +144,22 @@ export function PanelAkun() {
         {admins.map((a) => (
           <div key={a.id} className="card space-y-2 p-3">
             <div className="flex items-center justify-between">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold">{a.full_name}</p>
+                <p className="truncate text-xs text-muted-foreground">{a.email || '—'}</p>
                 <p className="text-xs text-muted-foreground">{ROLE_LABEL[a.role]}</p>
               </div>
               <select className="rounded-md border border-border bg-background px-2 py-1 text-xs"
                 value={a.role} onChange={(e) => changeRole(a.id, e.target.value, a.full_name)}>
                 {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
+            </div>
+            <div className="flex gap-2">
+              <input className="input-field py-2 text-sm" type="email" placeholder="Email baru"
+                value={emailEdit[a.id] || ''} onChange={(e) => setEmailEdit((p) => ({ ...p, [a.id]: e.target.value }))} />
+              <button className="btn-primary px-3" onClick={() => changeEmail(a.id, a.full_name)} title="Ganti email">
+                <Mail className="h-4 w-4" />
+              </button>
             </div>
             <div className="flex gap-2">
               <input className="input-field py-2 text-sm" placeholder="Password baru"
