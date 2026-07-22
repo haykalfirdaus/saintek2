@@ -6,10 +6,12 @@ import { PanelHeader, Toast } from '@/components/ui-bits'
 import { formatRupiah, toISODate } from '@/lib/utils'
 import { exportToExcel } from '@/lib/export-excel'
 import { FileDown } from 'lucide-react'
+import { useConfirm } from '@/components/confirm-dialog'
 
 // UI Absensi Kas: checkbox per siswa per minggu (Kamis). Rekap 1 bulan terakhir.
 export function PanelKas() {
   const supabase = createClient()
+  const confirm = useConfirm()
   const [students, setStudents] = useState([])
   const [payments, setPayments] = useState({}) // `${student_id}|${week}` -> true
   const [weeks, setWeeks] = useState([])
@@ -147,10 +149,19 @@ export function PanelKas() {
   const activeWeekMeta = weeksInMonth.find((w) => w.date === activeWeek)
 
   // Export SELURUH rekap kas ke Excel. Data TIDAK dihapus — hanya diunduh.
-  function handleExport(scope) {
+  async function handleExport(scope) {
     // scope: 'month' = bulan aktif saja, 'all' = semua minggu
     const cols = scope === 'month' ? weeksInMonth : weeks
     if (!students.length) return notify('Belum ada siswa', 'error')
+
+    const ok = await confirm({
+      title: 'Export ke Excel?',
+      message: scope === 'month'
+        ? `Unduh rekap kas bulan ${monthLabel(activeMonth)} ke Excel? Data tetap tersimpan.`
+        : 'Unduh rekap kas SEMUA minggu ke Excel? Data tetap tersimpan.',
+      confirmText: 'Ya, Unduh',
+    })
+    if (!ok) return
 
     const columns = [
       { key: 'no', label: 'No' },
