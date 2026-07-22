@@ -8,7 +8,17 @@ export const revalidate = 30
 
 export default async function KasPage() {
   const supabase = createPublicClient()
-  const { data: arrears } = await supabase.rpc('kas_arrears')
+  const [{ data: arrears }, { data: payments }] = await Promise.all([
+    supabase.rpc('kas_arrears'),
+    supabase.from('kas_payments').select('student_id, week_date, amount').eq('paid', true),
+  ])
+
+  // kelompokkan pembayaran per siswa (untuk detail "Selengkapnya")
+  const byStudent = {}
+  ;(payments ?? []).forEach((p) => {
+    ;(byStudent[p.student_id] ||= []).push({ week_date: p.week_date, amount: p.amount })
+  })
+  Object.values(byStudent).forEach((arr) => arr.sort((a, b) => a.week_date.localeCompare(b.week_date)))
 
   return (
     <div className="pb-nav mx-auto min-h-dvh max-w-md">
@@ -20,7 +30,7 @@ export default async function KasPage() {
       </header>
 
       <main className="px-4 py-5">
-        <KasClient rows={arrears ?? []} />
+        <KasClient rows={arrears ?? []} payments={byStudent} />
       </main>
 
       <BottomNav />
