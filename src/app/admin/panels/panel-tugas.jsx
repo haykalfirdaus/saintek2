@@ -1,0 +1,133 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { uploadToBucket } from '@/lib/upload'
+import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
+import { Camera, Trash2, Power } from 'lucide-react'
+
+// Input Tugas (UI Simpel): Mapel, Isi (teks/foto), Deadline (range / jam pasti).
+export function PanelTugas() {
+  const supabase = createClient()
+  const fileRef = useRef(null)
+  const [tasks, setTasks] = useState([])
+  const [form, setForm] = useState({
+    mapel: '', isi: '', deadline_type: 'exact',
+    deadline_start: '', deadline_end: '',
+  })
+  const [file, setFile] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [toast, setToast] = useState(null)
+
+  async function load() {
+    const { data } = await supabase.from('tasks').select('*').order('created_at', { ascending: false })
+    setTasks(data ?? [])
+  }
+  useEffect(() => { load() }, [])
+  function notify(msg, type = 'success') { setToast({ msg, type }); setTimeout(() => setToast(null), 2500) }
+
+  async function submit() {
+    if (!form.mapel.trim()) return notify('Mapel wajib diisi', 'error')
+    setLoading(true)
+    try {
+      let photo_url = null
+      if (file) photo_url = await uploadToBucket('tasks', file, 'tugas')
+      const payload = {
+        mapel: form.mapel.trim(),
+        isi: form.isi.trim() || null,
+        photo_url,
+        deadline_type: form.deadline_type,
+        deadline_start: form.deadline_type === 'range' && form.deadline_start ? new Date(form.deadline_start).toISOString() : null,
+        deadline_end: form.deadline_end ? new Date(form.deadline_end).toISOString() : null,
+        is_active: true,
+      }
+      const { error } = await supabase.from('tasks').insert(payload)
+      if (error) throw error
+      setForm({ mapel: '', isi: '', deadline_type: 'exact', deadline_start: '', deadline_end: '' })
+      setFile(null); if (fileRef.current) fileRef.current.value = ''
+      notify('Tugas ditambahkan')
+      load()
+    } catch (e) {
+      notify(e.message, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function toggleActive(t) {
+    await supabase.from('tasks').update({ is_active: !t.is_active }).eq('id', t.id)
+    load()
+  }
+  async function remove(id) {
+    await supabase.from('tasks').delete().eq('id', id)
+    load()
+  }
+
+  return (
+    <div>
+      <PanelHeader title="Input Tugas" desc="Mapel, isi (teks/foto), dan deadline." />
+      <Toast {...(toast || {})} />
+
+      <div className="card mb-5 space-y-3 p-4">
+        <input className="input-field" placeholder="Mapel" value={form.mapel}
+          onChange={(e) => setForm((f) => ({ ...f, mapel: e.target.value }))} />
+        <textarea className="input-field" rows={3} placeholder="Isi tugas (opsional)" value={form.isi}
+          onChange={(e) => setForm((f) => ({ ...f, isi: e.target.value }))} />
+
+        {/* Foto: memicu kamera / galeri di HP */}
+        <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden
+          onChange={(e) => setFile(e.target.files?.[0] || null)} />
+        <button type="button" className="btn-ghost w-full" onClick={() => fileRef.current?.click()}>
+          <Camera className="h-4 w-4" /> {file ? file.name : 'Lampirkan Foto (kamera/galeri)'}
+        </button>
+
+        {/* Deadline radio */}
+        <div className="rounded-lg border border-border p-3">
+          <p className="mb-2 text-sm font-medium">Deadline</p>
+          <label className="mb-2 flex items-center gap-2 text-sm">
+            <input type="radio" name="dl" checked={form.deadline_type === 'exact'}
+              onChange={() => setForm((f) => ({ ...f, deadline_type: 'exact' }))} />
+            Jam Pasti
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="radio" name="dl" checked={form.deadline_type === 'range'}
+              onChange={() => setForm((f) => ({ ...f, deadline_type: 'range' }))} />
+            Range Waktu
+          </label>
+
+          <div className="mt-3 space-y-2">
+            {form.deadline_type === 'range' && (
+              <div>
+                <label className="text-xs text-muted-foreground">Mulai</label>
+                <input type="datetime-local" className="input-field" value={form.deadline_start}
+                  onChange={(e) => setForm((f) => ({ ...f, deadline_start: e.target.value }))} />
+              </div>
+            )}
+            <div>
+              <label className="text-xs text-muted-foreground">{form.deadline_type === 'range' ? 'Selesai' : 'Deadline'}</label>
+              <input type="datetime-local" className="input-field" value={form.deadline_end}
+                onChange={(e) => setForm((f) => ({ ...f, deadline_end: e.target.value }))} />
+            </div>
+          </div>
+        </div>
+
+        <SaveButton loading={loading} onClick={submit}>Tambah Tugas</SaveButton>
+      </div>
+
+      <div className="space-y-2">
+        {tasks.map((t) => (
+          <div key={t.id} className="card flex items-center justify-between p-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{t.mapel} {!t.is_active && <span className="text-xs text-muted-foreground">(arsip)</span>}</p>
+              {t.isi && <p className="truncate text-xs text-muted-foreground">{t.isi}</p>}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button onClick={() => toggleActive(t)} className="text-muted-foreground" title="Aktif/Arsip"><Power className="h-4 w-4" /></button>
+              <button onClick={() => remove(t.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
