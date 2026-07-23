@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { PasswordInput } from '@/components/password-input'
 import { LogIn, Loader2, GraduationCap } from 'lucide-react'
 
 // Login khusus SISWA / Guru Mapel / Wali Kelas. Admin/pengurus lewat /admin.
@@ -61,10 +62,10 @@ export default function StudentLoginPage() {
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium">Password</label>
-          <input
-            type="password" required autoComplete="current-password"
+          <PasswordInput
+            required autoComplete="current-password"
             value={password} onChange={(e) => setPassword(e.target.value)}
-            className="input-field" placeholder="••••••••"
+            placeholder="••••••••"
           />
         </div>
 

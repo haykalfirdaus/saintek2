@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
+import { PasswordInput } from '@/components/password-input'
 import { ROLE_LABEL } from '@/lib/roles'
 import { UserPlus, KeyRound, Trash2, Mail } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-dialog'
@@ -15,7 +16,7 @@ export function PanelAkun() {
   const [toast, setToast] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const [create, setCreate] = useState({ email: '', password: '', full_name: '', role: 'sekretaris' })
+  const [create, setCreate] = useState({ email: '', password: '', confirm: '', full_name: '', role: 'sekretaris' })
   const [pw, setPw] = useState({}) // userId -> new password
   const [emailEdit, setEmailEdit] = useState({}) // userId -> new email
   const [currentId, setCurrentId] = useState(null)
@@ -50,6 +51,8 @@ export function PanelAkun() {
 
   async function createAdmin() {
     if (!create.email || !create.password) return notify('Email & password wajib', 'error')
+    if (create.password.length < 6) return notify('Password minimal 6 karakter', 'error')
+    if (create.password !== create.confirm) return notify('Konfirmasi password tidak cocok', 'error')
     const ok = await confirm({
       title: 'Buat Akun Admin?',
       message: `Buat akun ${ROLE_LABEL[create.role]} untuk ${create.email}?`,
@@ -57,8 +60,9 @@ export function PanelAkun() {
     if (!ok) return
     setLoading(true)
     try {
-      await callApi('create', create)
-      setCreate({ email: '', password: '', full_name: '', role: 'sekretaris' })
+      const { confirm: _c, ...payload } = create
+      await callApi('create', payload)
+      setCreate({ email: '', password: '', confirm: '', full_name: '', role: 'sekretaris' })
       notify('Akun admin dibuat'); load()
     } catch (e) { notify(e.message, 'error') } finally { setLoading(false) }
   }
@@ -131,8 +135,10 @@ export function PanelAkun() {
           onChange={(e) => setCreate((c) => ({ ...c, email: e.target.value }))} />
         <input className="input-field" placeholder="Nama lengkap" value={create.full_name}
           onChange={(e) => setCreate((c) => ({ ...c, full_name: e.target.value }))} />
-        <input className="input-field" type="text" placeholder="Password" value={create.password}
+        <PasswordInput placeholder="Password (min. 6 karakter)" value={create.password}
           onChange={(e) => setCreate((c) => ({ ...c, password: e.target.value }))} />
+        <PasswordInput placeholder="Ulangi password" value={create.confirm}
+          onChange={(e) => setCreate((c) => ({ ...c, confirm: e.target.value }))} />
         <select className="input-field" value={create.role}
           onChange={(e) => setCreate((c) => ({ ...c, role: e.target.value }))}>
           {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -186,8 +192,10 @@ export function PanelAkun() {
               </button>
             </div>
             <div className="flex gap-2">
-              <input className="input-field py-2 text-sm" placeholder="Password baru"
-                value={pw[a.id] || ''} onChange={(e) => setPw((p) => ({ ...p, [a.id]: e.target.value }))} />
+              <div className="flex-1">
+                <PasswordInput className="py-2 text-sm" placeholder="Password baru"
+                  value={pw[a.id] || ''} onChange={(e) => setPw((p) => ({ ...p, [a.id]: e.target.value }))} />
+              </div>
               <button className="btn-primary px-3" onClick={() => changePassword(a.id, a.full_name)} title="Ganti password">
                 <KeyRound className="h-4 w-4" />
               </button>

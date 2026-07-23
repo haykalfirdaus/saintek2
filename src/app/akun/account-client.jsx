@@ -8,6 +8,7 @@ import { BottomNav } from '@/components/bottom-nav'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Toast } from '@/components/ui-bits'
 import { UploadField } from '@/components/upload-field'
+import { PasswordInput } from '@/components/password-input'
 import { ROLE_LABEL } from '@/lib/roles'
 import {
   CircleUser, LogOut, MapPin, Loader2, CheckCircle2, ShieldCheck,
@@ -27,6 +28,7 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
 
   const [nickname, setNickname] = useState(student?.nickname || student?.nama || '')
   const [newPass, setNewPass] = useState('')
+  const [confirmPass, setConfirmPass] = useState('')
   const [savingProfile, setSavingProfile] = useState(false)
   const [locating, setLocating] = useState(false)
 
@@ -112,6 +114,7 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
   async function savePassword() {
     if (!newPass) return notify('Isi password baru.', 'error')
     if (newPass.length < 6) return notify('Password minimal 6 karakter.', 'error')
+    if (newPass !== confirmPass) return notify('Konfirmasi password tidak cocok.', 'error')
     setSavingProfile(true)
     try {
       const res = await fetch('/api/admin/accounts', {
@@ -120,7 +123,7 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Gagal')
-      setNewPass(''); notify('Password diperbarui')
+      setNewPass(''); setConfirmPass(''); notify('Password diperbarui')
     } catch (e) { notify(e.message, 'error') } finally { setSavingProfile(false) }
   }
 
@@ -275,8 +278,10 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
           <p className="flex items-center gap-1 text-xs text-muted-foreground">
             <Mail className="h-3.5 w-3.5" /> {email} (hanya pengurus yang bisa mengubah email)
           </p>
-          <input type="password" className="input-field py-2 text-sm" placeholder="Password baru (min. 6 karakter)"
+          <PasswordInput className="py-2 text-sm" placeholder="Password baru (min. 6 karakter)"
             value={newPass} onChange={(e) => setNewPass(e.target.value)} />
+          <PasswordInput className="py-2 text-sm" placeholder="Ulangi password baru"
+            value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} />
           <button className="btn-primary w-full" onClick={savePassword} disabled={savingProfile}>
             {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
             Simpan Password

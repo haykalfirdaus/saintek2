@@ -39,8 +39,8 @@ const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 
 // Rekap absensi: Hari Ini / Mingguan / Bulanan + navigasi + export.
 export function PanelAbsensi({ role }) {
   const supabase = createClient()
-  // Hanya developer yang boleh mengubah/hapus absensi. Admin lain view-only.
-  const canEdit = role === 'developer'
+  // Developer & sekretaris boleh mengubah/hapus absensi. Admin lain view-only.
+  const canEdit = role === 'developer' || role === 'sekretaris'
   const [mode, setMode] = useState('hari') // 'hari' | 'minggu' | 'bulan'
   const [anchor, setAnchor] = useState(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d })
   const [rows, setRows] = useState([])
@@ -242,7 +242,7 @@ export function PanelAbsensi({ role }) {
 
       {!canEdit && (
         <p className="mb-3 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
-          Mode lihat saja. Absensi siswa terkunci otomatis; hanya <b>developer</b> yang bisa mengubah.
+          Mode lihat saja. Absensi siswa terkunci otomatis; hanya <b>developer / sekretaris</b> yang bisa mengubah.
         </p>
       )}
 

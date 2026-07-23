@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { PasswordInput } from '@/components/password-input'
 import { LogIn, Loader2, ShieldCheck } from 'lucide-react'
 
 export default function LoginPage() {
@@ -61,10 +62,10 @@ export default function LoginPage() {
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium">Password</label>
-          <input
-            type="password" required autoComplete="current-password"
+          <PasswordInput
+            required autoComplete="current-password"
             value={password} onChange={(e) => setPassword(e.target.value)}
-            className="input-field" placeholder="••••••••"
+            placeholder="••••••••"
           />
         </div>
 
