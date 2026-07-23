@@ -138,7 +138,9 @@ end $$;
 
 -- =============================================================
 --  RPC rekap — sertakan waktu absen, lokasi, deskripsi, foto (utk export).
+--  DROP dulu karena tipe return berubah (tak bisa via create or replace).
 -- =============================================================
+drop function if exists public.attendance_range(date, date);
 create or replace function public.attendance_range(p_from date, p_to date)
 returns table (
   id uuid, student_id uuid, nama text, no_absen int,
