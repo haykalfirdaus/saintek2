@@ -6,7 +6,7 @@ import { PanelHeader, Toast } from '@/components/ui-bits'
 import { exportToExcel } from '@/lib/export-excel'
 import {
   CalendarCheck, ChevronLeft, ChevronRight, Download, Loader2,
-  Users, Trash2, X,
+  Users, Trash2, X, CheckCheck,
 } from 'lucide-react'
 
 // Label & warna status.
@@ -92,6 +92,31 @@ export function PanelAbsensi({ role }) {
     })
     if (error) return notify(error.message, 'error')
     load()
+  }
+
+  // Tandai HADIR untuk siswa yang BELUM punya catatan absen di tanggal ini.
+  // Tidak menimpa yang sudah absen (mis. geo/izin/sakit) — biar data asli aman.
+  const [bulkLoading, setBulkLoading] = useState(false)
+  async function markAllHadir() {
+    const tanggal = range.from
+    const belum = students.filter((s) => !todayMap.has(s.id))
+    if (!belum.length) return notify('Semua siswa sudah punya catatan absen.', 'error')
+    if (!window.confirm(`Tandai HADIR untuk ${belum.length} siswa yang belum absen di ${fmtTanggal(tanggal)}?\n\nYang sudah absen (lokasi/izin/sakit/dispen) TIDAK diubah.`)) return
+    setBulkLoading(true)
+    try {
+      for (const s of belum) {
+        const { error } = await supabase.rpc('dev_set_attendance', {
+          p_student: s.id, p_tanggal: tanggal, p_status: 'hadir',
+        })
+        if (error) throw error
+      }
+      notify(`${belum.length} siswa ditandai hadir`)
+      load()
+    } catch (e) {
+      notify(e.message, 'error')
+    } finally {
+      setBulkLoading(false)
+    }
   }
 
   // Hapus catatan absen (developer). RLS juga menjaga.
@@ -225,6 +250,17 @@ export function PanelAbsensi({ role }) {
         <div className="grid place-items-center py-10 text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : mode === 'hari' ? (
         /* MODE HARI: daftar semua siswa. Developer bisa set status; lainnya lihat saja. */
+        <>
+        {canEdit && (
+          <button
+            className="btn-primary mb-3 w-full"
+            onClick={markAllHadir}
+            disabled={bulkLoading}
+          >
+            {bulkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCheck className="h-4 w-4" />}
+            Tandai Hadir Semua (yang belum absen)
+          </button>
+        )}
         <div className="card divide-y divide-border">
           {students.map((s) => {
             const rec = todayMap.get(s.id)
@@ -269,6 +305,7 @@ export function PanelAbsensi({ role }) {
           })}
           {!students.length && <p className="px-4 py-3 text-sm text-muted-foreground">Belum ada siswa.</p>}
         </div>
+        </>
       ) : (
         /* MODE MINGGU / BULAN: daftar catatan absensi dalam rentang */
         rows.length ? (
