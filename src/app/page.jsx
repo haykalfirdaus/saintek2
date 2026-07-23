@@ -5,6 +5,7 @@ import { GallerySlider } from '@/components/gallery-slider'
 import { ZoomableImage } from '@/components/zoomable-image'
 import { TaskCard } from '@/components/task-card'
 import { RoleBadge } from '@/components/ui-bits'
+import { KasReminder } from '@/components/kas-reminder'
 import { getLandingData } from '@/lib/data'
 import { formatRupiah } from '@/lib/utils'
 import {
@@ -29,6 +30,8 @@ export default async function HomePage() {
     <div className="pb-nav mx-auto min-h-dvh max-w-md">
       <AnnouncementPopup popup={data.popup} />
       <LiveHeader mapelHariIni={data.mapelHariIni} libur={data.holiday || (data.isLibur ? {} : null)} />
+
+      <KasReminder />
 
       <main className="space-y-6 px-4 py-5">
         {/* TUGAS */}
