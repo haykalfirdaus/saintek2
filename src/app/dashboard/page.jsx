@@ -9,6 +9,11 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // Akun admin/pengurus (punya profiles) → arahkan ke panel admin.
+  const { data: adminProfile } = await supabase
+    .from('profiles').select('id').eq('id', user.id).maybeSingle()
+  if (adminProfile) redirect('/admin')
+
   // Data siswa yang tertaut ke akun ini.
   const { data: student } = await supabase
     .from('students')

@@ -154,7 +154,7 @@ begin
 
   if d > r then
     return query select false, round(d)::int,
-      format('Di luar radius (%.0f m dari %s m). Absen ditolak.', d, r); return;
+      format('Di luar radius (%s m dari %s m). Absen ditolak.', round(d)::int, r); return;
   end if;
 
   today := (now() at time zone 'Asia/Makassar')::date;

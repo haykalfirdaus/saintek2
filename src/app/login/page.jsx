@@ -19,10 +19,19 @@ export default function StudentLoginPage() {
     setLoading(true)
     setError('')
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError(error.message)
       setLoading(false)
+      return
+    }
+    // Pisahkan jalur: akun admin/pengurus (punya baris profiles) diarahkan ke
+    // /admin, bukan dashboard siswa.
+    const { data: profile } = await supabase
+      .from('profiles').select('id').eq('id', data.user.id).maybeSingle()
+    if (profile) {
+      router.replace('/admin')
+      router.refresh()
       return
     }
     router.replace('/dashboard')

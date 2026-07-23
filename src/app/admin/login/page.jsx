@@ -18,9 +18,19 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError(error.message)
+      setLoading(false)
+      return
+    }
+    // Pisahkan jalur: HANYA akun admin/pengurus (punya baris profiles) yang
+    // boleh masuk lewat sini. Akun siswa/guru/wali ditolak & diarahkan ke /login.
+    const { data: profile } = await supabase
+      .from('profiles').select('id').eq('id', data.user.id).maybeSingle()
+    if (!profile) {
+      await supabase.auth.signOut()
+      setError('Akun ini bukan akun admin. Silakan login di halaman siswa.')
       setLoading(false)
       return
     }
