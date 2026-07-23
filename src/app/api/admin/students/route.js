@@ -36,8 +36,9 @@ async function requireProvisioner() {
   if (!user) return { error: 'Unauthorized', status: 401 }
   const { data: me } = await supabase
     .from('profiles').select('role').eq('id', user.id).maybeSingle()
-  if (!me || !['developer', 'sekretaris'].includes(me.role)) {
-    return { error: 'Hanya developer / sekretaris.', status: 403 }
+  // Buat akun siswa: HANYA developer.
+  if (!me || me.role !== 'developer') {
+    return { error: 'Hanya developer yang boleh mengelola akun siswa.', status: 403 }
   }
   return { user }
 }
@@ -69,11 +70,24 @@ export async function POST(request) {
 
     if (body.action === 'provision') {
       // Siswa yang belum punya akun login.
-      const { data: students } = await admin
+      const { data: students, error: qErr } = await admin
         .from('students')
         .select('id, nama, no_absen, auth_user_id')
         .order('no_absen')
-      const pending = (students ?? []).filter((s) => !s.auth_user_id)
+      // Jangan telan error — biasanya kolom auth_user_id belum ada
+      // (attendance.sql belum dijalankan). Munculkan pesannya.
+      if (qErr) {
+        return NextResponse.json({
+          error: `Gagal membaca data siswa: ${qErr.message}. ` +
+            `Pastikan file supabase/attendance.sql sudah dijalankan (kolom auth_user_id).`,
+        }, { status: 400 })
+      }
+      if (!students?.length) {
+        return NextResponse.json({
+          error: 'Belum ada data siswa. Tambahkan siswa dulu di panel Siswa.',
+        }, { status: 400 })
+      }
+      const pending = students.filter((s) => !s.auth_user_id)
 
       let created = 0
       const errors = []
@@ -99,7 +113,18 @@ export async function POST(request) {
         })
         created++
       }
-      return NextResponse.json({ ok: true, created, skipped: (students?.length ?? 0) - pending.length, errors })
+      // Kalau semua siswa sudah punya akun, beri tahu (bukan diam-diam 0).
+      if (!pending.length) {
+        return NextResponse.json({
+          ok: true, created: 0, skipped: students.length, errors,
+          message: 'Semua siswa sudah punya akun.',
+        })
+      }
+      // Kalau ada percobaan tapi semua gagal, jadikan error agar terlihat.
+      if (created === 0 && errors.length) {
+        return NextResponse.json({ error: `Semua gagal: ${errors[0]}` }, { status: 400 })
+      }
+      return NextResponse.json({ ok: true, created, skipped: students.length - pending.length, errors })
     }
 
     if (body.action === 'reset_password') {

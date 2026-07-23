@@ -52,7 +52,12 @@ export function PanelProvisioning() {
     setWorking(true)
     try {
       const r = await callApi('provision', { domain, password })
-      notify(`${r.created} akun dibuat, ${r.skipped} sudah ada${r.errors?.length ? `, ${r.errors.length} gagal` : ''}`)
+      if (r.message) {
+        notify(r.message, r.created ? 'success' : 'error')
+      } else {
+        notify(`${r.created} akun dibuat, ${r.skipped} sudah ada${r.errors?.length ? `, ${r.errors.length} gagal` : ''}`,
+          r.created ? 'success' : 'error')
+      }
       load()
     } catch (e) { notify(e.message, 'error') } finally { setWorking(false) }
   }

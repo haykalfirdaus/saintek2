@@ -41,7 +41,7 @@ export const ROLE_CAPS = {
   sekretaris: {
     siswa: true, piket: true, mapel: true, libur: true,
     tugas: true, kas: false, pengumuman: false, popup: false, akun: false, galeri: true, akun_saya: true,
-    upload: true, absensi: true, provisioning: true, readonly: false,
+    upload: true, absensi: true, provisioning: false, readonly: false,
   },
   bendahara: {
     siswa: false, piket: false, mapel: false, libur: false,
