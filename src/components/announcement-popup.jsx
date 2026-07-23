@@ -50,6 +50,8 @@ export function AnnouncementPopup({ popup }) {
           <img
             src={popup.media_urls[0]}
             alt=""
+            width={384} height={224}
+            loading="lazy" decoding="async"
             className="mt-4 max-h-56 w-full rounded-lg object-cover"
           />
         )}

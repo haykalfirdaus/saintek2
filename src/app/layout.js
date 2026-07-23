@@ -1,5 +1,6 @@
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ConsoleSignature } from '@/components/console-signature'
 
 export const metadata = {
   title: 'XI Saintek 2',
@@ -23,6 +24,7 @@ export default function RootLayout({ children }) {
     <html lang="id" suppressHydrationWarning>
       <body>
         <ThemeProvider>{children}</ThemeProvider>
+        <ConsoleSignature />
       </body>
     </html>
   )

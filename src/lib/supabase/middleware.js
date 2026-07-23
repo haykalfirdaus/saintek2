@@ -32,17 +32,26 @@ export async function updateSession(request) {
 
   const path = request.nextUrl.pathname
 
-  // Protect the admin area; allow the login page through.
-  if (path.startsWith('/admin') && path !== '/admin/login' && !user) {
+  // Halaman yang boleh diakses TANPA sesi (hanya dua halaman login).
+  const isLoginPage = path === '/login' || path === '/admin/login'
+
+  // SELURUH web wajib login (khusus siswa/pengurus). Kalau belum login &
+  // bukan halaman login → arahkan ke /login. Area /admin punya login sendiri.
+  if (!user && !isLoginPage) {
     const url = request.nextUrl.clone()
-    url.pathname = '/admin/login'
+    url.pathname = path.startsWith('/admin') ? '/admin/login' : '/login'
     return NextResponse.redirect(url)
   }
 
-  // If already logged in, skip the login page.
-  if (path === '/admin/login' && user) {
+  // Sudah login → jangan tampilkan halaman login lagi.
+  if (user && path === '/admin/login') {
     const url = request.nextUrl.clone()
     url.pathname = '/admin'
+    return NextResponse.redirect(url)
+  }
+  if (user && path === '/login') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 

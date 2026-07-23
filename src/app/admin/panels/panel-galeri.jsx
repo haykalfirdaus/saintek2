@@ -2,19 +2,25 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { PanelHeader, Toast } from '@/components/ui-bits'
+import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
+import { UploadField } from '@/components/upload-field'
+import { canUpload } from '@/lib/roles'
 import { Trash2, Loader2, ImageOff } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-dialog'
 import { ZoomableImage } from '@/components/zoomable-image'
 
-// Kelola Galeri (khusus developer): hapus foto dari DB + file di Storage.
-export function PanelGaleri() {
+// Kelola Galeri: upload foto (role upload) + hapus foto dari DB & Storage.
+export function PanelGaleri({ role }) {
   const supabase = createClient()
   const confirm = useConfirm()
   const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(null)
   const [toast, setToast] = useState(null)
+  const [upload, setUpload] = useState(null)   // meta foto yg baru diupload
+  const [caption, setCaption] = useState('')
+  const [saving, setSaving] = useState(false)
+  const allowUpload = canUpload(role)
 
   async function load() {
     setLoading(true)
@@ -58,6 +64,26 @@ export function PanelGaleri() {
     }
   }
 
+  async function savePhoto() {
+    if (!upload?.url) return notify('Pilih / upload foto dulu', 'error')
+    setSaving(true)
+    try {
+      const { data, error } = await supabase
+        .from('gallery')
+        .insert({ url: upload.url, caption: caption.trim() || null, in_slider: true, uploaded_by_public: false })
+        .select()
+        .single()
+      if (error) throw error
+      setPhotos((ps) => [data, ...ps])
+      setUpload(null); setCaption('')
+      notify('Foto ditambahkan')
+    } catch (e) {
+      notify(e.message, 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function toggleSlider(photo) {
     const { error } = await supabase
       .from('gallery')
@@ -69,8 +95,27 @@ export function PanelGaleri() {
 
   return (
     <div>
-      <PanelHeader title="Kelola Galeri" desc="Hapus foto & atur foto slideshow. Khusus developer." />
+      <PanelHeader title="Kelola Galeri" desc="Upload foto, atur slideshow, & hapus foto." />
       <Toast {...(toast || {})} />
+
+      {/* Upload foto galeri — hanya role upload (dev/sekretaris/ketua). Gambar saja. */}
+      {allowUpload && (
+        <div className="card mb-5 space-y-3 p-4">
+          <UploadField
+            bucket="gallery"
+            folder="galeri"
+            accept={['camera', 'photo']}
+            onUploaded={setUpload}
+          />
+          <input
+            className="input-field py-2 text-sm"
+            placeholder="Keterangan foto (opsional)"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+          />
+          <SaveButton loading={saving} onClick={savePhoto}>Tambah ke Galeri</SaveButton>
+        </div>
+      )}
 
       {loading ? (
         <div className="grid place-items-center py-10 text-muted-foreground">

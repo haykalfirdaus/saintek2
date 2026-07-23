@@ -9,7 +9,7 @@ import { X } from 'lucide-react'
   - HP: pinch (2 jari) zoom, double-tap zoom, 1 jari geser saat ter-zoom.
   Zoom ini KHUSUS fotonya, tidak mempengaruhi zoom halaman web.
 */
-export function ZoomableImage({ src, alt = '', className = '', imgClassName = '' }) {
+export function ZoomableImage({ src, alt = '', className = '', priority = false }) {
   const [open, setOpen] = useState(false)
   return (
     <>
@@ -17,7 +17,11 @@ export function ZoomableImage({ src, alt = '', className = '', imgClassName = ''
         src={src}
         alt={alt}
         className={`cursor-zoom-in ${className}`}
-        loading="lazy"
+        // IMAGE DELIVERY: lazy + async decode agar tidak blok main-thread.
+        // `priority` untuk gambar above-the-fold (LCP) → eager + high fetch.
+        loading={priority ? 'eager' : 'lazy'}
+        fetchPriority={priority ? 'high' : 'auto'}
+        decoding="async"
         draggable={false}
         onClick={() => setOpen(true)}
       />
@@ -122,6 +126,7 @@ function Lightbox({ src, alt, onClose }) {
           src={src}
           alt={alt}
           draggable={false}
+          decoding="async"
           className="mx-auto h-full w-full select-none object-contain"
           style={{
             transform: `translate(${tx}px, ${ty}px) scale(${scale})`,

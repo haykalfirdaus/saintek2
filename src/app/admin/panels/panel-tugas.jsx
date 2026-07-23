@@ -1,25 +1,26 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { uploadToBucket } from '@/lib/upload'
 import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
-import { Camera, Trash2, Power } from 'lucide-react'
+import { UploadField } from '@/components/upload-field'
+import { canUpload } from '@/lib/roles'
+import { Trash2, Power } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-dialog'
 
-// Input Tugas (UI Simpel): Mapel, Isi (teks/foto), Deadline (range / jam pasti).
-export function PanelTugas() {
+// Input Tugas (UI Simpel): Mapel, Isi (teks/lampiran), Deadline (range / jam pasti).
+export function PanelTugas({ role }) {
   const supabase = createClient()
   const confirm = useConfirm()
-  const fileRef = useRef(null)
   const [tasks, setTasks] = useState([])
   const [form, setForm] = useState({
     mapel: '', isi: '', deadline_type: 'exact',
     deadline_start: '', deadline_end: '',
   })
-  const [file, setFile] = useState(null)
+  const [attachment, setAttachment] = useState(null) // meta dari UploadField
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState(null)
+  const allowUpload = canUpload(role)
 
   async function load() {
     const { data } = await supabase.from('tasks').select('*').order('created_at', { ascending: false })
@@ -32,12 +33,15 @@ export function PanelTugas() {
     if (!form.mapel.trim()) return notify('Mapel wajib diisi', 'error')
     setLoading(true)
     try {
-      let photo_url = null
-      if (file) photo_url = await uploadToBucket('tasks', file, 'tugas')
+      // Foto → tetap di photo_url (dipakai TaskCard). Dokumen/URL → attachment_*.
+      const isImage = attachment?.is_image
       const payload = {
         mapel: form.mapel.trim(),
         isi: form.isi.trim() || null,
-        photo_url,
+        photo_url: isImage ? attachment.url : null,
+        attachment_url: attachment && !isImage ? attachment.url : null,
+        attachment_name: attachment && !isImage ? attachment.name : null,
+        attachment_type: attachment && !isImage ? attachment.type : null,
         deadline_type: form.deadline_type,
         // Simpan sebagai tanggal (jam 12 siang WIB) agar tidak bergeser zona waktu.
         deadline_start: form.deadline_type === 'range' && form.deadline_start ? new Date(form.deadline_start + 'T12:00:00').toISOString() : null,
@@ -47,7 +51,7 @@ export function PanelTugas() {
       const { error } = await supabase.from('tasks').insert(payload)
       if (error) throw error
       setForm({ mapel: '', isi: '', deadline_type: 'exact', deadline_start: '', deadline_end: '' })
-      setFile(null); if (fileRef.current) fileRef.current.value = ''
+      setAttachment(null)
       notify('Tugas ditambahkan')
       load()
     } catch (e) {
@@ -83,12 +87,14 @@ export function PanelTugas() {
         <textarea className="input-field" rows={3} placeholder="Isi tugas (opsional)" value={form.isi}
           onChange={(e) => setForm((f) => ({ ...f, isi: e.target.value }))} />
 
-        {/* Foto: memicu kamera / galeri di HP */}
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden
-          onChange={(e) => setFile(e.target.files?.[0] || null)} />
-        <button type="button" className="btn-ghost w-full" onClick={() => fileRef.current?.click()}>
-          <Camera className="h-4 w-4" /> {file ? file.name : 'Lampirkan Foto (kamera/galeri)'}
-        </button>
+        {/* Upload lanjutan (kamera / foto / dokumen / URL) — hanya role tertentu */}
+        {allowUpload && (
+          <UploadField
+            bucket="tasks"
+            folder="tugas"
+            onUploaded={setAttachment}
+          />
+        )}
 
         {/* Deadline radio — tanggal saja, tanpa jam */}
         <div className="rounded-lg border border-border p-3">

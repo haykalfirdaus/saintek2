@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { signOut } from './actions'
-import { ROLE_LABEL, can } from '@/lib/roles'
+import { ROLE_LABEL, PREVIEW_ROLES, can, isReadOnly } from '@/lib/roles'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ConfirmProvider } from '@/components/confirm-dialog'
 import {
   Users, Brush, BookOpen, CalendarOff, ClipboardList, Wallet,
-  Megaphone, MonitorSmartphone, KeyRound, LogOut, ShieldCheck, Images, AlertTriangle, UserCog,
+  Megaphone, MonitorSmartphone, KeyRound, LogOut, ShieldCheck, Images,
+  AlertTriangle, UserCog, CalendarCheck, IdCard, Eye, Lock,
 } from 'lucide-react'
 
 import { PanelSiswa } from './panels/panel-siswa'
@@ -21,9 +22,13 @@ import { PanelPopup } from './panels/panel-popup'
 import { PanelAkun } from './panels/panel-akun'
 import { PanelAkunSaya } from './panels/panel-akun-saya'
 import { PanelGaleri } from './panels/panel-galeri'
+import { PanelAbsensi } from './panels/panel-absensi'
+import { PanelProvisioning } from './panels/panel-provisioning'
 
 const TABS = [
   { key: 'siswa', label: 'Siswa', icon: Users, cap: 'siswa', C: PanelSiswa },
+  { key: 'absensi', label: 'Absensi', icon: CalendarCheck, cap: 'absensi', C: PanelAbsensi },
+  { key: 'provisioning', label: 'Akun Siswa', icon: IdCard, cap: 'provisioning', C: PanelProvisioning },
   { key: 'piket', label: 'Piket', icon: Brush, cap: 'piket', C: PanelPiket },
   { key: 'mapel', label: 'Mapel', icon: BookOpen, cap: 'mapel', C: PanelMapel },
   { key: 'libur', label: 'Libur', icon: CalendarOff, cap: 'libur', C: PanelLibur },
@@ -37,9 +42,24 @@ const TABS = [
 ]
 
 export function AdminDashboard({ role, name }) {
-  const allowed = TABS.filter((t) => can(role, t.cap))
+  const isDev = role === 'developer'
+  // "Lihat sebagai" — developer bisa pratinjau panel milik role lain.
+  const [viewAs, setViewAs] = useState('') // '' = diri sendiri (developer)
+  const effectiveRole = isDev && viewAs ? viewAs : role
+  const preview = isDev && !!viewAs
+  const readOnly = isReadOnly(effectiveRole)
+
+  const allowed = TABS.filter((t) => can(effectiveRole, t.cap))
   const [active, setActive] = useState(allowed[0]?.key)
-  const ActivePanel = allowed.find((t) => t.key === active)?.C
+  // Saat ganti "lihat sebagai", pastikan tab aktif tetap valid.
+  const activeTab = allowed.find((t) => t.key === active) || allowed[0]
+  const ActivePanel = activeTab?.C
+
+  function changeViewAs(v) {
+    setViewAs(v)
+    const next = TABS.filter((t) => can(v || role, t.cap))
+    setActive(next[0]?.key)
+  }
 
   return (
     <ConfirmProvider>
@@ -65,8 +85,42 @@ export function AdminDashboard({ role, name }) {
           </div>
         </div>
 
+        {/* Developer: Lihat sebagai role lain (pratinjau fitur) */}
+        {isDev && (
+          <div className="mx-4 mb-3 flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+            <Eye className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <label className="text-sm font-medium text-muted-foreground">Lihat sebagai</label>
+            <select
+              value={viewAs}
+              onChange={(e) => changeViewAs(e.target.value)}
+              className="ml-auto rounded-md border border-border bg-background px-2 py-1 text-sm"
+            >
+              <option value="">Developer (saya)</option>
+              {PREVIEW_ROLES.map((r) => (
+                <option key={r} value={r}>{ROLE_LABEL[r]}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Banner mode pratinjau */}
+        {preview && (
+          <div className="mx-4 mb-3 flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary">
+            <Eye className="h-4 w-4 shrink-0" />
+            Mode pratinjau: {ROLE_LABEL[effectiveRole]}
+            {readOnly && ' (read-only)'}
+          </div>
+        )}
+
+        {/* Banner read-only (mis. wali kelas) */}
+        {readOnly && !preview && (
+          <div className="mx-4 mb-3 flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm font-semibold text-muted-foreground">
+            <Lock className="h-4 w-4 shrink-0" /> Akses hanya-baca — tombol aksi disembunyikan.
+          </div>
+        )}
+
         {/* Bendahara wajib banner */}
-        {role === 'bendahara' && (
+        {effectiveRole === 'bendahara' && (
           <div className="mx-4 mb-3 flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
             <AlertTriangle className="h-4 w-4 shrink-0" /> PERINGATAN: Harus tetap catat manual di buku untuk keamanan data!
           </div>
@@ -82,7 +136,7 @@ export function AdminDashboard({ role, name }) {
                 onClick={() => setActive(t.key)}
                 className={
                   'flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition ' +
-                  (active === t.key
+                  (activeTab?.key === t.key
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-border bg-card text-muted-foreground hover:bg-muted')
                 }
@@ -95,7 +149,9 @@ export function AdminDashboard({ role, name }) {
       </header>
 
       <main className="px-4 py-5">
-        {ActivePanel ? <ActivePanel role={role} /> : (
+        {ActivePanel ? (
+          <ActivePanel role={effectiveRole} readOnly={readOnly} />
+        ) : (
           <p className="card p-4 text-sm text-muted-foreground">Tidak ada panel yang tersedia untuk role ini.</p>
         )}
       </main>

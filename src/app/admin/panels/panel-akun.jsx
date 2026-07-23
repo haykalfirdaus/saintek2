@@ -19,6 +19,7 @@ export function PanelAkun() {
   const [pw, setPw] = useState({}) // userId -> new password
   const [emailEdit, setEmailEdit] = useState({}) // userId -> new email
   const [currentId, setCurrentId] = useState(null)
+  const [filterRole, setFilterRole] = useState('') // '' = belum pilih → list disembunyikan
 
   async function load() {
     // Ambil daftar admin + email via API (email tersimpan di auth.users).
@@ -139,9 +140,32 @@ export function PanelAkun() {
         <SaveButton loading={loading} onClick={createAdmin}>Buat Akun</SaveButton>
       </div>
 
-      {/* Daftar admin + ganti password */}
+      {/* Cari berdasarkan role dulu, baru tampilkan list */}
+      <div className="card mb-3 p-3">
+        <label className="mb-1 block text-sm font-medium">Cari akun berdasarkan role</label>
+        <select
+          className="input-field"
+          value={filterRole}
+          onChange={(e) => setFilterRole(e.target.value)}
+        >
+          <option value="">— Pilih role dulu —</option>
+          {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+      </div>
+
+      {!filterRole ? (
+        <p className="card p-4 text-sm text-muted-foreground">
+          Pilih role di atas untuk menampilkan daftar akun.
+        </p>
+      ) : (
+      /* Daftar akun sesuai role terpilih + ganti password */
       <div className="space-y-2">
-        {admins.map((a) => (
+        {admins.filter((a) => a.role === filterRole).length === 0 && (
+          <p className="card p-4 text-sm text-muted-foreground">
+            Tidak ada akun dengan role {ROLE_LABEL[filterRole]}.
+          </p>
+        )}
+        {admins.filter((a) => a.role === filterRole).map((a) => (
           <div key={a.id} className="card space-y-2 p-3">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
@@ -179,6 +203,7 @@ export function PanelAkun() {
           </div>
         ))}
       </div>
+      )}
     </div>
   )
 }
