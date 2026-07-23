@@ -9,7 +9,8 @@ import { FileDown, Lock } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-dialog'
 
 // UI Absensi Kas: checkbox per siswa per minggu (Kamis). Rekap 1 bulan terakhir.
-export function PanelKas() {
+// readOnly (mis. wali kelas): hanya lihat & export, tidak bisa centang/ubah.
+export function PanelKas({ readOnly = false }) {
   const supabase = createClient()
   const confirm = useConfirm()
   const [students, setStudents] = useState([])
@@ -116,6 +117,7 @@ export function PanelKas() {
   }
 
   async function toggle(studentId, checked) {
+    if (readOnly) return
     const { prevPaid, nextPaid } = lockInfo(studentId, activeWeek)
     if (checked && !prevPaid) {
       return notify('Bayar minggu sebelumnya dulu untuk siswa ini.', 'error')
@@ -231,6 +233,12 @@ export function PanelKas() {
     <div>
       <PanelHeader title="Absensi Kas" desc="Centang = Bayar. Kosong = Nunggak." />
       <Toast {...(toast || {})} />
+
+      {readOnly && (
+        <div className="mb-3 flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+          <Lock className="h-3.5 w-3.5" /> Mode lihat saja — kamu bisa melihat & export, tapi tidak bisa mengubah pembayaran.
+        </div>
+      )}
 
       <div className="card mb-3 p-4">
         <p className="text-sm text-muted-foreground">Terkumpul bulan {monthLabel(activeMonth)}</p>
@@ -359,9 +367,9 @@ export function PanelKas() {
         {students.map((s) => {
           const checked = !!payments[`${s.id}|${activeWeek}`]
           const { prevPaid, nextPaid } = lockInfo(s.id, activeWeek)
-          // terkunci: belum boleh centang (minggu lalu nunggak) ATAU
-          //           belum boleh batal (minggu depan sudah lunas)
-          const locked = !activeWeek || (!checked && !prevPaid) || (checked && nextPaid)
+          // terkunci: read-only, ATAU belum boleh centang (minggu lalu nunggak),
+          //           ATAU belum boleh batal (minggu depan sudah lunas)
+          const locked = readOnly || !activeWeek || (!checked && !prevPaid) || (checked && nextPaid)
           return (
             <label
               key={s.id}
