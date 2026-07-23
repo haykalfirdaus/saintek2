@@ -1,7 +1,6 @@
 import { BottomNav } from '@/components/bottom-nav'
 import { GallerySlider } from '@/components/gallery-slider'
 import { ZoomableImage } from '@/components/zoomable-image'
-import { UploadFotoButton } from '@/components/upload-foto-button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { createPublicClient } from '@/lib/supabase/public'
 import { Images } from 'lucide-react'
@@ -32,9 +31,6 @@ export default async function GaleriPage() {
       </header>
 
       <main className="space-y-6 px-4 py-5">
-        {/* Tombol upload foto publik (izin kamera & galeri) di tab Galeri */}
-        <UploadFotoButton label="Upload Foto ke Galeri" inSlider />
-
         <section>
           <p className="section-title">Slideshow Otomatis</p>
           <GallerySlider photos={slider} />

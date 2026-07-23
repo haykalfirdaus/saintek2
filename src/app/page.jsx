@@ -3,7 +3,6 @@ import { BottomNav } from '@/components/bottom-nav'
 import { AnnouncementPopup } from '@/components/announcement-popup'
 import { GallerySlider } from '@/components/gallery-slider'
 import { ZoomableImage } from '@/components/zoomable-image'
-import { UploadFotoButton } from '@/components/upload-foto-button'
 import { TaskCard } from '@/components/task-card'
 import { getLandingData } from '@/lib/data'
 import { formatRupiah } from '@/lib/utils'
@@ -174,7 +173,6 @@ export default async function HomePage() {
             </Link>
           </div>
           <GallerySlider photos={data.galeri.slice(0, 10)} />
-          <UploadFotoButton className="mt-3" label="Upload Foto ke Galeri" />
         </section>
       </main>
 

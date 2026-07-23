@@ -1,6 +1,5 @@
 import { BottomNav } from '@/components/bottom-nav'
 import { TaskCard } from '@/components/task-card'
-import { UploadFotoButton } from '@/components/upload-foto-button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { createPublicClient } from '@/lib/supabase/public'
 import { ClipboardList } from 'lucide-react'
@@ -26,9 +25,6 @@ export default async function TugasPage() {
       </header>
 
       <main className="space-y-6 px-4 py-5">
-        {/* Tombol upload foto publik di tab Tugas (izin kamera & galeri) */}
-        <UploadFotoButton label="Upload Foto (Tugas/Galeri)" />
-
         <section>
           <p className="section-title">Aktif</p>
           {aktif?.length ? (
