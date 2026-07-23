@@ -34,7 +34,7 @@ create table if not exists public.app_settings (
   id int primary key default 1 check (id = 1),
   school_lat double precision not null default -8.582858006646104,
   school_lng double precision not null default 116.09685855414219,
-  radius_m   int not null default 100
+  radius_m   int not null default 50
 );
 alter table public.app_settings enable row level security;
 insert into public.app_settings (id) values (1) on conflict do nothing;
