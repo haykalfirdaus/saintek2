@@ -86,7 +86,8 @@ export function PanelProvisioning() {
         { key: 'no_absen', label: 'No' },
         { key: 'nama', label: 'Nama' },
         { key: 'email', label: 'Email' },
-        { key: 'password', label: 'Password' },
+        { key: 'password', label: 'Password (default)' },
+        { key: 'password_changed', label: 'Status', format: (v) => (v ? 'Sudah diganti siswa' : 'Default') },
       ],
       rows: creds,
     })
@@ -141,11 +142,17 @@ export function PanelProvisioning() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{c.nama}</p>
                 <p className="truncate text-xs text-muted-foreground">{c.email}</p>
+                {c.password_changed && (
+                  <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                    Sudah diganti siswa — password default tidak berlaku
+                  </p>
+                )}
               </div>
-              <span className="shrink-0 rounded bg-muted px-2 py-1 font-mono text-xs">
+              <span className={'shrink-0 rounded px-2 py-1 font-mono text-xs ' +
+                (c.password_changed ? 'bg-amber-500/10 text-amber-600 line-through dark:text-amber-400' : 'bg-muted')}>
                 {show ? c.password : '••••••'}
               </span>
-              <button onClick={() => resetOne(c.student_id ?? undefined, c.nama)} className="shrink-0 text-muted-foreground hover:text-foreground" title="Reset password">
+              <button onClick={() => resetOne(c.student_id ?? undefined, c.nama)} className="shrink-0 text-muted-foreground hover:text-foreground" title="Reset password (kembalikan ke default)">
                 <KeyRound className="h-4 w-4" />
               </button>
             </div>

@@ -65,7 +65,7 @@ export async function POST(request) {
       // relationship PostgREST (yang bisa gagal → error). Query dua langkah.
       const { data: creds, error: cErr } = await admin
         .from('student_credentials')
-        .select('student_id, email, default_password, created_at')
+        .select('student_id, email, default_password, password_changed, created_at')
         .order('created_at')
       if (cErr) return NextResponse.json({ error: cErr.message }, { status: 400 })
 
@@ -79,6 +79,7 @@ export async function POST(request) {
         nama: byId.get(c.student_id)?.nama ?? '',
         email: c.email,
         password: c.default_password,
+        password_changed: !!c.password_changed,
       })).sort((a, b) => (a.no_absen || 0) - (b.no_absen || 0))
       return NextResponse.json({ ok: true, creds: rows })
     }
@@ -151,7 +152,7 @@ export async function POST(request) {
       if (!st?.auth_user_id) return NextResponse.json({ error: 'Siswa belum punya akun.' }, { status: 400 })
       const { error } = await admin.auth.admin.updateUserById(st.auth_user_id, { password })
       if (error) throw error
-      if (cred) await admin.from('student_credentials').update({ default_password: password }).eq('student_id', studentId)
+      if (cred) await admin.from('student_credentials').update({ default_password: password, password_changed: false }).eq('student_id', studentId)
       return NextResponse.json({ ok: true })
     }
 

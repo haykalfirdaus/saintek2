@@ -43,6 +43,16 @@ export async function POST(request) {
       }
       const { error } = await admin.auth.admin.updateUserById(user.id, patch)
       if (error) throw error
+      // Kalau yang ganti adalah SISWA & mengganti password, tandai kredensial
+      // default sudah tidak berlaku (password asli tak bisa disimpan — di-hash).
+      if (patch.password) {
+        const { data: st } = await admin
+          .from('students').select('id').eq('auth_user_id', user.id).maybeSingle()
+        if (st?.id) {
+          await admin.from('student_credentials')
+            .update({ password_changed: true }).eq('student_id', st.id)
+        }
+      }
       return NextResponse.json({ ok: true })
     }
 
