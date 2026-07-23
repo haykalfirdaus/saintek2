@@ -29,8 +29,11 @@ export function PanelProvisioning() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...body }),
     })
-    const json = await res.json()
-    if (!res.ok) throw new Error(json.error || 'Gagal')
+    // Tangani respons kosong/non-JSON (mis. error server 500 tanpa body).
+    const text = await res.text()
+    let json = {}
+    try { json = text ? JSON.parse(text) : {} } catch { json = {} }
+    if (!res.ok) throw new Error(json.error || `Gagal (HTTP ${res.status})`)
     return json
   }
 

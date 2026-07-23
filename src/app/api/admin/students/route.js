@@ -44,24 +44,39 @@ async function requireProvisioner() {
 }
 
 export async function POST(request) {
-  const guard = await requireProvisioner()
-  if (guard.error) return NextResponse.json({ error: guard.error }, { status: guard.status })
-
-  const body = await request.json()
-  const admin = createAdminClient()
-  const domain = (body.domain || DEFAULT_DOMAIN).replace(/^@/, '')
-  const password = body.password || DEFAULT_PASSWORD
-
   try {
+    const guard = await requireProvisioner()
+    if (guard.error) return NextResponse.json({ error: guard.error }, { status: guard.status })
+
+    const body = await request.json()
+
+    // Pastikan service-role key ada — kalau tidak, beri pesan jelas (bukan crash).
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({
+        error: 'Server belum dikonfigurasi (SUPABASE_SERVICE_ROLE_KEY belum di-set di Vercel).',
+      }, { status: 500 })
+    }
+    const admin = createAdminClient()
+    const domain = (body.domain || DEFAULT_DOMAIN).replace(/^@/, '')
+    const password = body.password || DEFAULT_PASSWORD
+
     if (body.action === 'list_creds') {
-      const { data: creds } = await admin
+      // Ambil kredensial + gabungkan nama/no_absen tanpa bergantung pada
+      // relationship PostgREST (yang bisa gagal → error). Query dua langkah.
+      const { data: creds, error: cErr } = await admin
         .from('student_credentials')
-        .select('*, students(nama, no_absen)')
+        .select('student_id, email, default_password, created_at')
         .order('created_at')
+      if (cErr) return NextResponse.json({ error: cErr.message }, { status: 400 })
+
+      const { data: studs } = await admin
+        .from('students').select('id, nama, no_absen')
+      const byId = new Map((studs ?? []).map((s) => [s.id, s]))
+
       const rows = (creds ?? []).map((c) => ({
         student_id: c.student_id,
-        no_absen: c.students?.no_absen ?? '',
-        nama: c.students?.nama ?? '',
+        no_absen: byId.get(c.student_id)?.no_absen ?? '',
+        nama: byId.get(c.student_id)?.nama ?? '',
         email: c.email,
         password: c.default_password,
       })).sort((a, b) => (a.no_absen || 0) - (b.no_absen || 0))
