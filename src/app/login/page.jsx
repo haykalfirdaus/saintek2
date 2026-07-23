@@ -34,7 +34,7 @@ export default function StudentLoginPage() {
       router.refresh()
       return
     }
-    router.replace('/dashboard')
+    router.replace('/')
     router.refresh()
   }
 

@@ -1,18 +1,17 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { StudentDashboard } from './student-dashboard'
+import { AccountClient } from './account-client'
 
 export const dynamic = 'force-dynamic'
 
-export default async function DashboardPage() {
+export default async function AkunPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Akun admin/pengurus (punya profiles) → arahkan ke panel admin.
+  // Akun admin/pengurus → arahkan ke panel admin.
   const { data: adminProfile } = await supabase
-    .from('profiles').select('id').eq('id', user.id).maybeSingle()
-  if (adminProfile) redirect('/admin')
+    .from('profiles').select('role').eq('id', user.id).maybeSingle()
 
   // Data siswa yang tertaut ke akun ini.
   const { data: student } = await supabase
@@ -21,7 +20,6 @@ export default async function DashboardPage() {
     .eq('auth_user_id', user.id)
     .maybeSingle()
 
-  // Absen hari ini (WITA) — dibaca di client juga, ini utk initial state.
   let todayAttendance = null
   if (student) {
     const { data } = await supabase
@@ -34,9 +32,11 @@ export default async function DashboardPage() {
   }
 
   return (
-    <StudentDashboard
+    <AccountClient
       email={user.email}
       student={student}
+      isAdmin={!!adminProfile}
+      adminRole={adminProfile?.role ?? null}
       initialAttendance={todayAttendance}
     />
   )

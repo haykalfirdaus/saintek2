@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { CalendarDays, Palmtree, LogIn } from 'lucide-react'
+import { CalendarDays, Palmtree } from 'lucide-react'
 import { formatTanggalLengkap, getJakartaNow } from '@/lib/utils'
 import { ThemeToggle } from './theme-toggle'
 
@@ -34,15 +33,7 @@ export function LiveHeader({ mapelHariIni = [], libur = null }) {
               {formatTanggalLengkap(now.date)}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground transition active:scale-95 hover:bg-muted"
-            >
-              <LogIn className="h-4 w-4" /> Login
-            </Link>
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
         </div>
 
         <div className="mt-3">

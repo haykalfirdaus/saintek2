@@ -37,8 +37,10 @@ const DAY_NAMES = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
 const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 
 // Rekap absensi: Hari Ini / Mingguan / Bulanan + navigasi + export.
-export function PanelAbsensi({ role, readOnly }) {
+export function PanelAbsensi({ role }) {
   const supabase = createClient()
+  // Hanya developer yang boleh mengubah/hapus absensi. Admin lain view-only.
+  const canEdit = role === 'developer'
   const [mode, setMode] = useState('hari') // 'hari' | 'minggu' | 'bulan'
   const [anchor, setAnchor] = useState(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d })
   const [rows, setRows] = useState([])
@@ -83,15 +85,16 @@ export function PanelAbsensi({ role, readOnly }) {
     })
   }
 
-  // Set/ubah status manual utk tanggal tertentu (mode hari).
+  // Set/ubah status manual (DEVELOPER). Via RPC agar field geo/self di-reset.
   async function setStatus(studentId, tanggal, status) {
-    const { error } = await supabase.from('attendance')
-      .upsert({ student_id: studentId, tanggal, status, method: 'manual' }, { onConflict: 'student_id,tanggal' })
+    const { error } = await supabase.rpc('dev_set_attendance', {
+      p_student: studentId, p_tanggal: tanggal, p_status: status,
+    })
     if (error) return notify(error.message, 'error')
     load()
   }
 
-  // Hapus catatan absen (via id, atau via student+tanggal di mode hari).
+  // Hapus catatan absen (developer). RLS juga menjaga.
   async function removeById(id) {
     const { error } = await supabase.from('attendance').delete().eq('id', id)
     if (error) return notify(error.message, 'error')
@@ -102,6 +105,23 @@ export function PanelAbsensi({ role, readOnly }) {
       .delete().eq('student_id', studentId).eq('tanggal', tanggal)
     if (error) return notify(error.message, 'error')
     notify('Data absen dihapus'); load()
+  }
+
+  // Format waktu absen (WITA) untuk export & tampilan.
+  function fmtWaktu(ts) {
+    if (!ts) return ''
+    return new Date(ts).toLocaleString('id-ID', {
+      timeZone: 'Asia/Makassar', day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    })
+  }
+  function fmtLokasi(r) {
+    if (r.lat == null || r.lng == null) return ''
+    return `${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`
+  }
+  function mapsLink(r) {
+    if (r.lat == null || r.lng == null) return ''
+    return `https://www.google.com/maps?q=${r.lat},${r.lng}`
   }
 
   // ---- Ringkasan status ----
@@ -126,8 +146,13 @@ export function PanelAbsensi({ role, readOnly }) {
         { key: 'no_absen', label: 'No' },
         { key: 'nama', label: 'Nama' },
         { key: 'status', label: 'Status', format: (v) => STATUS[v]?.label || v },
-        { key: 'method', label: 'Metode' },
+        { key: 'method', label: 'Metode', format: (v) => ({ geo: 'Lokasi', self: 'Mandiri', manual: 'Manual' }[v] || v) },
+        { key: 'waktu', label: 'Waktu Absen', format: (v) => fmtWaktu(v) },
+        { key: 'lat', label: 'Lokasi (lat, lng)', format: (_, r) => fmtLokasi(r) },
+        { key: 'id', label: 'Link Maps', format: (_, r) => mapsLink(r) },
         { key: 'distance_m', label: 'Jarak (m)' },
+        { key: 'deskripsi', label: 'Keterangan' },
+        { key: 'foto_url', label: 'Foto Surat' },
       ],
       rows,
     })
@@ -190,18 +215,27 @@ export function PanelAbsensi({ role, readOnly }) {
         </button>
       </div>
 
+      {!canEdit && (
+        <p className="mb-3 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+          Mode lihat saja. Absensi siswa terkunci otomatis; hanya <b>developer</b> yang bisa mengubah.
+        </p>
+      )}
+
       {loading ? (
         <div className="grid place-items-center py-10 text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : mode === 'hari' ? (
-        /* MODE HARI: daftar semua siswa + tombol set status (jika bukan read-only) */
+        /* MODE HARI: daftar semua siswa. Developer bisa set status; lainnya lihat saja. */
         <div className="card divide-y divide-border">
           {students.map((s) => {
             const rec = todayMap.get(s.id)
             return (
               <div key={s.id} className="flex items-center gap-2 px-3 py-2">
                 <span className="w-7 shrink-0 text-xs text-muted-foreground">{s.no_absen}</span>
-                <span className="min-w-0 flex-1 truncate text-sm">{s.nama}</span>
-                {readOnly ? (
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate text-sm">{s.nama}</span>
+                  {rec?.deskripsi && <span className="block truncate text-[11px] text-muted-foreground">{rec.deskripsi}</span>}
+                </div>
+                {!canEdit ? (
                   <span className={`rounded-md px-2 py-1 text-xs font-semibold ${rec ? STATUS[rec.status].cls : 'bg-muted text-muted-foreground'}`}>
                     {rec ? STATUS[rec.status].label : '—'}
                   </span>
@@ -220,7 +254,6 @@ export function PanelAbsensi({ role, readOnly }) {
                         {STATUS[k].label[0]}
                       </button>
                     ))}
-                    {/* Hapus data absen siswa ini utk tanggal terpilih */}
                     <button
                       onClick={() => rec && removeByStudent(s.id, range.from)}
                       disabled={!rec}
@@ -242,15 +275,31 @@ export function PanelAbsensi({ role, readOnly }) {
           <div className="card divide-y divide-border">
             {rows.map((r) => (
               <div key={r.id} className="flex items-center gap-2 px-3 py-2">
-                <span className="w-24 shrink-0 text-xs text-muted-foreground">{fmtTanggal(r.tanggal)}</span>
-                <span className="min-w-0 flex-1 truncate text-sm">
-                  {r.nama} <span className="text-muted-foreground">[{r.no_absen}]</span>
-                </span>
-                {r.distance_m != null && <span className="shrink-0 text-[11px] text-muted-foreground">{r.distance_m} m</span>}
+                <span className="w-20 shrink-0 text-xs text-muted-foreground">{fmtTanggal(r.tanggal)}</span>
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate text-sm">
+                    {r.nama} <span className="text-muted-foreground">[{r.no_absen}]</span>
+                  </span>
+                  <span className="flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
+                    {r.waktu && <span>{fmtWaktu(r.waktu)}</span>}
+                    {r.distance_m != null && <span>· {r.distance_m} m</span>}
+                    {r.lat != null && (
+                      <a href={mapsLink(r)} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        lihat lokasi
+                      </a>
+                    )}
+                    {r.foto_url && (
+                      <a href={r.foto_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        foto surat
+                      </a>
+                    )}
+                    {r.deskripsi && <span className="w-full truncate">{r.deskripsi}</span>}
+                  </span>
+                </div>
                 <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold ${STATUS[r.status]?.cls}`}>
                   {STATUS[r.status]?.label || r.status}
                 </span>
-                {!readOnly && (
+                {canEdit && (
                   <button
                     onClick={() => removeById(r.id)}
                     className="grid h-7 w-7 shrink-0 place-items-center rounded text-destructive transition hover:bg-destructive/10"

@@ -17,7 +17,7 @@ export function PanelTugas({ role }) {
     mapel: '', isi: '', deadline_type: 'exact',
     deadline_start: '', deadline_end: '',
   })
-  const [attachment, setAttachment] = useState(null) // meta dari UploadField
+  const [attachments, setAttachments] = useState([]) // daftar lampiran dari UploadField
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState(null)
   const allowUpload = canUpload(role)
@@ -33,15 +33,19 @@ export function PanelTugas({ role }) {
     if (!form.mapel.trim()) return notify('Mapel wajib diisi', 'error')
     setLoading(true)
     try {
-      // Foto → tetap di photo_url (dipakai TaskCard). Dokumen/URL → attachment_*.
-      const isImage = attachment?.is_image
+      // Simpan SEMUA lampiran di kolom jsonb `attachments`.
+      // Untuk kompatibilitas dgn tampilan lama: foto pertama → photo_url,
+      // dokumen/URL pertama → attachment_*.
+      const firstImage = attachments.find((a) => a.is_image)
+      const firstDoc = attachments.find((a) => !a.is_image)
       const payload = {
         mapel: form.mapel.trim(),
         isi: form.isi.trim() || null,
-        photo_url: isImage ? attachment.url : null,
-        attachment_url: attachment && !isImage ? attachment.url : null,
-        attachment_name: attachment && !isImage ? attachment.name : null,
-        attachment_type: attachment && !isImage ? attachment.type : null,
+        attachments,
+        photo_url: firstImage?.url ?? null,
+        attachment_url: firstDoc?.url ?? null,
+        attachment_name: firstDoc?.name ?? null,
+        attachment_type: firstDoc?.type ?? null,
         deadline_type: form.deadline_type,
         // Simpan sebagai tanggal (jam 12 siang WIB) agar tidak bergeser zona waktu.
         deadline_start: form.deadline_type === 'range' && form.deadline_start ? new Date(form.deadline_start + 'T12:00:00').toISOString() : null,
@@ -51,7 +55,7 @@ export function PanelTugas({ role }) {
       const { error } = await supabase.from('tasks').insert(payload)
       if (error) throw error
       setForm({ mapel: '', isi: '', deadline_type: 'exact', deadline_start: '', deadline_end: '' })
-      setAttachment(null)
+      setAttachments([])
       notify('Tugas ditambahkan')
       load()
     } catch (e) {
@@ -92,7 +96,8 @@ export function PanelTugas({ role }) {
           <UploadField
             bucket="tasks"
             folder="tugas"
-            onUploaded={setAttachment}
+            multiple
+            onUploaded={setAttachments}
           />
         )}
 

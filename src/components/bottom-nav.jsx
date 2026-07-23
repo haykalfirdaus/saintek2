@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, ClipboardList, Wallet, Images } from 'lucide-react'
+import { Home, ClipboardList, Wallet, Images, CircleUser } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -10,6 +10,7 @@ const NAV = [
   { href: '/tugas', label: 'Tugas', icon: ClipboardList },
   { href: '/kas', label: 'Kas', icon: Wallet },
   { href: '/galeri', label: 'Galeri', icon: Images },
+  { href: '/akun', label: 'Akun', icon: CircleUser },
 ]
 
 // Fixed bottom navigation — thumb-zone reachable, respects safe-area inset.
@@ -21,7 +22,7 @@ export function BottomNav() {
       aria-label="Navigasi utama"
       className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/90 backdrop-blur-lg"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-4">
+      <ul className="mx-auto grid max-w-md grid-cols-5">
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
           return (

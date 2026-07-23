@@ -16,17 +16,23 @@ import {
   Logika:
     - Opsi file/kamera  → upload ke Supabase Storage, hasilkan public URL.
     - Opsi URL          → pakai teks tautan langsung (tanpa upload).
-  Saat sukses memanggil onUploaded({ url, name, type, size, is_image, source }).
 
   Props:
     bucket     : nama bucket Storage tujuan (default 'tasks')
     folder     : subfolder di bucket (default 'upload')
-    onUploaded : callback(meta) setelah URL siap
+    multiple   : true → bisa banyak lampiran (foto+url+dokumen sekaligus).
+                 false (default) → satu lampiran (dipakai galeri).
+    onUploaded : dipanggil tiap ada perubahan.
+                 - multiple=false → onUploaded(meta | null)
+                 - multiple=true  → onUploaded([meta, ...])
     accept     : batasi opsi ['camera','photo','doc','url'] (default semua)
+
+  meta = { url, name, type, size, is_image, source }
 */
 export function UploadField({
   bucket = 'tasks',
   folder = 'upload',
+  multiple = false,
   onUploaded,
   accept = ['camera', 'photo', 'doc', 'url'],
 }) {
@@ -36,19 +42,23 @@ export function UploadField({
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [result, setResult] = useState(null) // meta terakhir
+  const [items, setItems] = useState([]) // daftar lampiran
   const [urlText, setUrlText] = useState('')
   const [showUrl, setShowUrl] = useState(false)
+
+  // Simpan hasil & beri tahu parent (array kalau multiple, else 1 item / null).
+  function commit(next) {
+    setItems(next)
+    onUploaded?.(multiple ? next : (next[next.length - 1] ?? null))
+  }
 
   async function handleFile(file, source) {
     if (!file) return
     setError('')
     setBusy(true)
     try {
-      const meta = await uploadWithMeta(bucket, file, folder)
-      const full = { ...meta, source }
-      setResult(full)
-      onUploaded?.(full)
+      const meta = { ...(await uploadWithMeta(bucket, file, folder)), source }
+      commit(multiple ? [...items, meta] : [meta])
     } catch (e) {
       setError(e.message || 'Gagal mengunggah.')
     } finally {
@@ -75,15 +85,13 @@ export function UploadField({
       is_image: /\.(png|jpe?g|gif|webp|avif|svg)(\?|$)/i.test(url),
       source: 'url',
     }
-    setResult(meta)
-    onUploaded?.(meta)
+    commit(multiple ? [...items, meta] : [meta])
     setUrlText('')
     setShowUrl(false)
   }
 
-  function clearResult() {
-    setResult(null)
-    onUploaded?.(null)
+  function removeAt(idx) {
+    commit(items.filter((_, i) => i !== idx))
   }
 
   const options = [
@@ -109,6 +117,7 @@ export function UploadField({
     <div className="rounded-lg border border-border p-3">
       <p className="section-title mb-2">
         <UploadCloud className="h-4 w-4" /> Upload Lampiran
+        {multiple && <span className="ml-1 font-normal normal-case text-muted-foreground">(bisa lebih dari satu)</span>}
       </p>
 
       {/* Hidden native inputs */}
@@ -180,37 +189,40 @@ export function UploadField({
         </p>
       )}
 
-      {/* Preview hasil */}
-      {result && !busy && (
-        <div className="mt-3 flex items-center gap-3 rounded-lg border border-border bg-muted/40 p-2">
-          {result.is_image ? (
-            // Thumbnail kecil — width/height eksplisit agar tidak CLS.
-            <img
-              src={result.url} alt={result.name}
-              width={48} height={48} loading="lazy" decoding="async"
-              className="h-12 w-12 shrink-0 rounded-md object-cover"
-            />
-          ) : (
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
-              <FileText className="h-5 w-5" />
-            </span>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-1 truncate text-sm font-medium">
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
-              {result.name}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {result.source === 'url' ? 'Tautan eksternal' : humanSize(result.size)}
-            </p>
-          </div>
-          <button
-            type="button" onClick={clearResult}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted"
-            aria-label="Hapus lampiran"
-          >
-            <X className="h-4 w-4" />
-          </button>
+      {/* Preview daftar lampiran */}
+      {items.length > 0 && !busy && (
+        <div className="mt-3 space-y-2">
+          {items.map((it, idx) => (
+            <div key={idx} className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 p-2">
+              {it.is_image ? (
+                <img
+                  src={it.url} alt={it.name}
+                  width={48} height={48} loading="lazy" decoding="async"
+                  className="h-12 w-12 shrink-0 rounded-md object-cover"
+                />
+              ) : (
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+                  <FileText className="h-5 w-5" />
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-1 truncate text-sm font-medium">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
+                  {it.name}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {it.source === 'url' ? 'Tautan eksternal' : humanSize(it.size)}
+                </p>
+              </div>
+              <button
+                type="button" onClick={() => removeAt(idx)}
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted"
+                aria-label="Hapus lampiran"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>
