@@ -17,7 +17,9 @@ export default async function AdminHome() {
     .eq('id', user.id)
     .maybeSingle()
 
-  const role = profile?.role ?? 'ketua'
+  // Akun tanpa baris profiles BUKAN admin (mis. akun siswa). Jangan default ke
+  // 'ketua' — tolak & arahkan ke halaman utama siswa.
+  if (!profile) redirect('/')
 
-  return <AdminDashboard role={role} name={profile?.full_name || user.email} />
+  return <AdminDashboard role={profile.role} name={profile.full_name || user.email} />
 }

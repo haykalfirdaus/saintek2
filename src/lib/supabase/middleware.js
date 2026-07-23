@@ -43,11 +43,29 @@ export async function updateSession(request) {
     return NextResponse.redirect(url)
   }
 
-  // Sudah login → jangan tampilkan halaman login lagi.
+  // Area /admin: hanya akun admin (punya baris profiles). Akun siswa yang
+  // login lalu buka /admin → tolak, arahkan ke halaman utama.
+  if (user && path.startsWith('/admin') && path !== '/admin/login') {
+    const { data: profile } = await supabase
+      .from('profiles').select('id').eq('id', user.id).maybeSingle()
+    if (!profile) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Sudah login (admin) → jangan tampilkan halaman login admin lagi.
   if (user && path === '/admin/login') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/admin'
-    return NextResponse.redirect(url)
+    const { data: profile } = await supabase
+      .from('profiles').select('id').eq('id', user.id).maybeSingle()
+    // Hanya admin yg di-skip ke /admin; siswa yg iseng buka /admin/login
+    // dibiarkan (nanti login page-nya sendiri menolak).
+    if (profile) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin'
+      return NextResponse.redirect(url)
+    }
   }
   if (user && path === '/login') {
     const url = request.nextUrl.clone()

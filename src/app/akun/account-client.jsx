@@ -58,6 +58,7 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
   function absenHadir() {
     if (!student) return notify('Akun tidak terhubung ke data siswa.', 'error')
     if (!('geolocation' in navigator)) return notify('Perangkat tidak mendukung lokasi.', 'error')
+    if (!window.confirm('Absen HADIR sekarang?\n\nSetelah absen tercatat, kamu TIDAK bisa mengubahnya sendiri (terkunci). Hanya developer yang bisa mengubah.')) return
     setLocating(true)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -84,6 +85,7 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
   async function submitReport() {
     if (!reportType) return
     if (!desc.trim()) return notify('Isi deskripsi dulu.', 'error')
+    if (!window.confirm(`Ajukan ${STATUS_LABEL[reportType]} sekarang?\n\nSetelah dikirim, absen TIDAK bisa kamu ubah lagi (terkunci). Hanya developer yang bisa mengubah.`)) return
     setSubmitting(true)
     const { data, error } = await supabase.rpc('self_report', {
       p_status: reportType,
