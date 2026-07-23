@@ -59,11 +59,11 @@ export const ROLE_CAPS = {
     tugas: true, kas: true, pengumuman: true, popup: false, akun: false, galeri: false, akun_saya: true,
     upload: false, absensi: true, provisioning: false, readonly: true,
   },
-  // Hanya Tugas.
+  // Tugas (bisa tulis) + Absensi (lihat saja).
   guru_mapel: {
     siswa: false, piket: false, mapel: false, libur: false,
     tugas: true, kas: false, pengumuman: false, popup: false, akun: false, galeri: false, akun_saya: true,
-    upload: false, absensi: false, provisioning: false, readonly: false,
+    upload: false, absensi: true, provisioning: false, readonly: false,
   },
   // Hanya Piket.
   pengatur_kebersihan: {

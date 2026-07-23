@@ -4,6 +4,7 @@ import { AnnouncementPopup } from '@/components/announcement-popup'
 import { GallerySlider } from '@/components/gallery-slider'
 import { ZoomableImage } from '@/components/zoomable-image'
 import { TaskCard } from '@/components/task-card'
+import { RoleBadge } from '@/components/ui-bits'
 import { getLandingData } from '@/lib/data'
 import { formatRupiah } from '@/lib/utils'
 import {
@@ -62,6 +63,9 @@ export default async function HomePage() {
                   <p className="whitespace-pre-wrap text-sm text-card-foreground">{a.isi}</p>
                   {a.dari && (
                     <p className="mt-2 text-xs text-muted-foreground">— {a.dari}</p>
+                  )}
+                  {a.created_by_role && (
+                    <div className="mt-2"><RoleBadge role={a.created_by_role} /></div>
                   )}
                   {Array.isArray(a.media_urls) && a.media_urls.length > 0 && (
                     <div className="mt-3 grid grid-cols-2 gap-2">

@@ -1,5 +1,6 @@
 import { Clock, CalendarRange, FileText, Download } from 'lucide-react'
 import { ZoomableImage } from '@/components/zoomable-image'
+import { RoleBadge } from '@/components/ui-bits'
 
 function fmt(dt) {
   if (!dt) return null
@@ -39,6 +40,12 @@ export function TaskCard({ task }) {
         <p className="mt-2 whitespace-pre-wrap text-sm text-card-foreground">
           {task.isi}
         </p>
+      )}
+
+      {task.created_by_role && (
+        <div className="mt-2">
+          <RoleBadge role={task.created_by_role} />
+        </div>
       )}
 
       {attachments.map((a, i) =>

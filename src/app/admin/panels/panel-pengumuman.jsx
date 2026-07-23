@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { uploadToBucket } from '@/lib/upload'
-import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
+import { PanelHeader, Toast, SaveButton, RoleBadge } from '@/components/ui-bits'
 import { Paperclip, Trash2, Pencil, X } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-dialog'
 
@@ -136,6 +136,7 @@ export function PanelPengumuman() {
               {r.judul && <p className="text-sm font-semibold">{r.judul}</p>}
               <p className="truncate text-sm text-muted-foreground">{r.isi}</p>
               {r.dari && <p className="text-xs text-muted-foreground">— {r.dari}</p>}
+              {r.created_by_role && <div className="mt-1"><RoleBadge role={r.created_by_role} /></div>}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <button onClick={() => startEdit(r)} className="text-muted-foreground hover:text-foreground" title="Edit"><Pencil className="h-4 w-4" /></button>

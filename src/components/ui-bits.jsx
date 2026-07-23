@@ -1,8 +1,20 @@
 'use client'
 
-import { Loader2 } from 'lucide-react'
+import { Loader2, UserCircle2 } from 'lucide-react'
+import { ROLE_LABEL } from '@/lib/roles'
 
 // Tiny shared bits reused across admin panels.
+
+// Badge kecil menampilkan role pembuat (tugas/pengumuman).
+export function RoleBadge({ role, className = '' }) {
+  if (!role) return null
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground ${className}`}>
+      <UserCircle2 className="h-3 w-3" />
+      {ROLE_LABEL[role] || role}
+    </span>
+  )
+}
 
 export function PanelHeader({ title, desc }) {
   return (

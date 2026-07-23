@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { PanelHeader, Toast, SaveButton } from '@/components/ui-bits'
+import { PanelHeader, Toast, SaveButton, RoleBadge } from '@/components/ui-bits'
 import { UploadField } from '@/components/upload-field'
 import { canUpload } from '@/lib/roles'
 import { Trash2, Power } from 'lucide-react'
@@ -140,6 +140,7 @@ export function PanelTugas({ role }) {
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{t.mapel} {!t.is_active && <span className="text-xs text-muted-foreground">(arsip)</span>}</p>
               {t.isi && <p className="truncate text-xs text-muted-foreground">{t.isi}</p>}
+              {t.created_by_role && <div className="mt-1"><RoleBadge role={t.created_by_role} /></div>}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <button onClick={() => toggleActive(t)} className="text-muted-foreground" title="Aktif/Arsip"><Power className="h-4 w-4" /></button>
