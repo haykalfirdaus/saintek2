@@ -85,12 +85,26 @@ export function PanelAbsensi({ role }) {
     })
   }
 
-  // Set/ubah status manual (DEVELOPER). Via RPC agar field geo/self di-reset.
+  // Hapus file foto surat di Storage (bucket 'attendance') via Storage API.
+  // DB tidak boleh delete storage.objects langsung, jadi dilakukan di sini.
+  async function deleteFotoFile(fotoUrl) {
+    if (!fotoUrl) return
+    const marker = '/storage/v1/object/public/attendance/'
+    const i = fotoUrl.indexOf(marker)
+    if (i === -1) return
+    const path = fotoUrl.slice(i + marker.length)
+    if (path) await supabase.storage.from('attendance').remove([path])
+  }
+
+  // Set/ubah status manual. Via RPC agar field geo/self di-reset.
+  // Jika record lama punya foto surat, hapus filenya dari Storage.
   async function setStatus(studentId, tanggal, status) {
+    const old = todayMap.get(studentId)
     const { error } = await supabase.rpc('dev_set_attendance', {
       p_student: studentId, p_tanggal: tanggal, p_status: status,
     })
     if (error) return notify(error.message, 'error')
+    if (old?.foto_url) await deleteFotoFile(old.foto_url)
     load()
   }
 
@@ -119,16 +133,20 @@ export function PanelAbsensi({ role }) {
     }
   }
 
-  // Hapus catatan absen (developer). RLS juga menjaga.
+  // Hapus catatan absen + foto suratnya (via Storage API).
   async function removeById(id) {
+    const row = rows.find((r) => r.id === id)
     const { error } = await supabase.from('attendance').delete().eq('id', id)
     if (error) return notify(error.message, 'error')
+    if (row?.foto_url) await deleteFotoFile(row.foto_url)
     notify('Data absen dihapus'); load()
   }
   async function removeByStudent(studentId, tanggal) {
+    const old = todayMap.get(studentId)
     const { error } = await supabase.from('attendance')
       .delete().eq('student_id', studentId).eq('tanggal', tanggal)
     if (error) return notify(error.message, 'error')
+    if (old?.foto_url) await deleteFotoFile(old.foto_url)
     notify('Data absen dihapus'); load()
   }
 
