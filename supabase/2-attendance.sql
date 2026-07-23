@@ -92,7 +92,7 @@ create table if not exists public.attendance (
   id uuid primary key default gen_random_uuid(),
   student_id uuid not null references public.students(id) on delete cascade,
   tanggal date not null,
-  status text not null default 'hadir' check (status in ('hadir','izin','sakit','alpha')),
+  status text not null default 'hadir' check (status in ('hadir','izin','sakit','dispen','alpha')),
   method text not null default 'geo' check (method in ('geo','manual')),
   lat double precision,
   lng double precision,

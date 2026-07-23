@@ -6,7 +6,7 @@ import { PanelHeader, Toast } from '@/components/ui-bits'
 import { exportToExcel } from '@/lib/export-excel'
 import {
   CalendarCheck, ChevronLeft, ChevronRight, Download, Loader2,
-  CheckCircle2, Users,
+  Users, Trash2, X,
 } from 'lucide-react'
 
 // Label & warna status.
@@ -14,9 +14,10 @@ const STATUS = {
   hadir: { label: 'Hadir', cls: 'bg-success/15 text-success' },
   izin: { label: 'Izin', cls: 'bg-primary/15 text-primary' },
   sakit: { label: 'Sakit', cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
+  dispen: { label: 'Dispen', cls: 'bg-violet-500/15 text-violet-600 dark:text-violet-400' },
   alpha: { label: 'Alpha', cls: 'bg-destructive/15 text-destructive' },
 }
-const STATUS_KEYS = ['hadir', 'izin', 'sakit', 'alpha']
+const STATUS_KEYS = ['hadir', 'izin', 'sakit', 'dispen', 'alpha']
 
 // ---- Date helpers (WITA-agnostic; pakai tanggal lokal browser) ----
 function iso(d) {
@@ -90,9 +91,22 @@ export function PanelAbsensi({ role, readOnly }) {
     load()
   }
 
+  // Hapus catatan absen (via id, atau via student+tanggal di mode hari).
+  async function removeById(id) {
+    const { error } = await supabase.from('attendance').delete().eq('id', id)
+    if (error) return notify(error.message, 'error')
+    notify('Data absen dihapus'); load()
+  }
+  async function removeByStudent(studentId, tanggal) {
+    const { error } = await supabase.from('attendance')
+      .delete().eq('student_id', studentId).eq('tanggal', tanggal)
+    if (error) return notify(error.message, 'error')
+    notify('Data absen dihapus'); load()
+  }
+
   // ---- Ringkasan status ----
   const summary = useMemo(() => {
-    const s = { hadir: 0, izin: 0, sakit: 0, alpha: 0 }
+    const s = Object.fromEntries(STATUS_KEYS.map((k) => [k, 0]))
     for (const r of rows) if (s[r.status] != null) s[r.status]++
     return s
   }, [rows])
@@ -192,7 +206,7 @@ export function PanelAbsensi({ role, readOnly }) {
                     {rec ? STATUS[rec.status].label : '—'}
                   </span>
                 ) : (
-                  <div className="flex shrink-0 gap-1">
+                  <div className="flex shrink-0 items-center gap-1">
                     {STATUS_KEYS.map((k) => (
                       <button
                         key={k}
@@ -206,6 +220,15 @@ export function PanelAbsensi({ role, readOnly }) {
                         {STATUS[k].label[0]}
                       </button>
                     ))}
+                    {/* Hapus data absen siswa ini utk tanggal terpilih */}
+                    <button
+                      onClick={() => rec && removeByStudent(s.id, range.from)}
+                      disabled={!rec}
+                      className="ml-0.5 grid h-7 w-7 place-items-center rounded text-destructive transition hover:bg-destructive/10 disabled:opacity-30"
+                      title="Hapus absen"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 )}
               </div>
@@ -227,6 +250,15 @@ export function PanelAbsensi({ role, readOnly }) {
                 <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold ${STATUS[r.status]?.cls}`}>
                   {STATUS[r.status]?.label || r.status}
                 </span>
+                {!readOnly && (
+                  <button
+                    onClick={() => removeById(r.id)}
+                    className="grid h-7 w-7 shrink-0 place-items-center rounded text-destructive transition hover:bg-destructive/10"
+                    title="Hapus absen"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
             ))}
           </div>
