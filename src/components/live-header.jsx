@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CalendarDays, Palmtree } from 'lucide-react'
+import { CalendarDays, Palmtree, GraduationCap } from 'lucide-react'
 import { formatTanggalLengkap, getJakartaNow } from '@/lib/utils'
+import { subjectIcon } from '@/lib/subject-icons'
 import { ThemeToggle } from './theme-toggle'
 
-// Real-time date/day header (WIB). Updates every minute.
+// Real-time date/day header (WITA). Updates every 30s. ClassHub branding.
 export function LiveHeader({ mapelHariIni = [], libur = null }) {
   const [now, setNow] = useState(() => getJakartaNow())
 
@@ -18,48 +19,59 @@ export function LiveHeader({ mapelHariIni = [], libur = null }) {
   const isLibur = isMinggu || !!libur
 
   return (
-    <header className="pt-safe sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-lg">
+    <header className="pt-safe sticky top-0 z-30 border-b border-border bg-background/70 backdrop-blur-xl">
       <div className="mx-auto max-w-md px-4 py-3">
-        <div className="flex items-start justify-between">
+        {/* Brand row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-elevated">
+              <GraduationCap className="h-5 w-5" />
+            </span>
+            <div className="leading-none">
+              <p className="text-[15px] font-extrabold tracking-tight">ClassHub</p>
+              <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                XI Saintek 2 · MAN 2 Mataram
+              </p>
+            </div>
+          </div>
+          <ThemeToggle />
+        </div>
+
+        {/* Date */}
+        <div className="mt-3 flex items-center justify-between gap-2">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-primary">
-              XI Saintek 2
-            </p>
-            <h1 className="mt-0.5 text-lg font-bold leading-tight">
-              {now.dayName}
-            </h1>
+            <h1 className="text-lg font-bold leading-tight">{now.dayName}</h1>
             <p className="flex items-center gap-1 text-sm text-muted-foreground">
               <CalendarDays className="h-3.5 w-3.5" />
               {formatTanggalLengkap(now.date)}
             </p>
           </div>
-          <ThemeToggle />
         </div>
 
+        {/* Mapel hari ini */}
         <div className="mt-3">
           {isLibur ? (
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm font-semibold text-muted-foreground">
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-sm font-semibold text-muted-foreground">
               <Palmtree className="h-4 w-4" /> Sedang Libur
               {libur?.keterangan ? ` — ${libur.keterangan}` : isMinggu ? ' (Minggu)' : ''}
             </div>
-          ) : (
-            <div>
-              <p className="section-title mb-1">Mapel Hari Ini</p>
-              {mapelHariIni.length ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {mapelHariIni.map((m, i) => (
-                    <span
-                      key={i}
-                      className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-card-foreground"
-                    >
-                      {i + 1}. {m}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Belum ada jadwal.</p>
-              )}
+          ) : mapelHariIni.length ? (
+            <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              {mapelHariIni.map((m, i) => {
+                const Icon = subjectIcon(m)
+                return (
+                  <span
+                    key={i}
+                    className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-card-foreground shadow-card"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-primary" />
+                    {m}
+                  </span>
+                )
+              })}
             </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Belum ada jadwal.</p>
           )}
         </div>
       </div>

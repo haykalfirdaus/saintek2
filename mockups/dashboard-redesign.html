@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ClassHub - Perbandingan Desain Dasbor Kelas (XI Saintek 2)</title>
+
+<!--
+  PROTOTYPE, not production. Standalone HTML for design review.
+  - Google Fonts <link> is used here because this is a static prototype file;
+    in the real Next.js app, load Plus Jakarta Sans via next/font instead.
+  - Icons come from the real Lucide library (this project already depends on
+    lucide-react), loaded here via its UMD CDN build. No hand-rolled icon paths.
+  - "Lottie" moments in the brief are approximated with honest CSS/SVG motion
+    (bell ring, checkbox draw, floating planet). Swap in real .lottie assets later.
+  - The school crest is a labeled placeholder slot; drop in the real MAN 2 crest.
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+  /* ============================================================
+     CANVAS (presentation shell around the two light mockups)
+     Neutral slate so both light themes read cleanly against it.
+     ============================================================ */
+  * { box-sizing: border-box; }
+  :root {
+    --font: 'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --canvas: 222 30% 12%;
+    --canvas-2: 222 32% 9%;
+  }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    color: #e7ecf5;
+    background:
+      radial-gradient(1100px 700px at 15% -10%, hsl(224 60% 24% / .55), transparent 60%),
+      radial-gradient(900px 600px at 100% 0%, hsl(158 55% 22% / .40), transparent 55%),
+      linear-gradient(180deg, hsl(var(--canvas)), hsl(var(--canvas-2)));
+    min-height: 100dvh;
+    line-height: 1.5;
+  }
+
+  .board { max-width: 1500px; margin: 0 auto; padding: 40px 24px 96px; }
+
+  .board-head { max-width: 760px; margin: 0 auto 8px; text-align: center; }
+  .board-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: #9fb4d8; background: hsl(220 40% 30% / .35);
+    border: 1px solid hsl(220 40% 60% / .25);
+    padding: 6px 14px; border-radius: 999px;
+  }
+  .board-head h1 {
+    font-size: clamp(26px, 4vw, 44px); font-weight: 800; letter-spacing: -.02em;
+    margin: 18px 0 10px; line-height: 1.05;
+  }
+  .board-head p { color: #a9b6cf; font-size: 15px; margin: 0 auto; max-width: 62ch; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; justify-content: center;
+    margin: 22px auto 0; color: #c3cee2; font-size: 13px;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .swatch { width: 14px; height: 14px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+
+  /* Split comparison grid */
+  .compare {
+    margin-top: 40px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 28px;
+  }
+  .vs {
+    position: absolute; left: 50%; top: 92px; transform: translate(-50%,0);
+    z-index: 5;
+    width: 46px; height: 46px; display: grid; place-items: center;
+    border-radius: 999px; font-weight: 800; font-size: 13px; letter-spacing: .04em;
+    color: #0b1220; background: linear-gradient(180deg,#fff,#d7def0);
+    box-shadow: 0 10px 26px rgba(0,0,0,.4), inset 0 1px 0 #fff;
+  }
+  .compare-wrap { position: relative; }
+
+  @media (max-width: 900px) {
+    .compare { grid-template-columns: 1fr; gap: 40px; }
+    .vs { display: none; }
+  }
+
+  /* Column header per theme */
+  .col-head { display: flex; align-items: center; gap: 12px; margin: 0 4px 16px; }
+  .col-dot { width: 30px; height: 30px; border-radius: 9px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); flex: none; }
+  .col-head h2 { font-size: 17px; font-weight: 700; margin: 0; }
+  .col-head p { font-size: 12.5px; color: #9aa7c2; margin: 2px 0 0; }
+
+  .device-stack { display: grid; gap: 26px; justify-items: center; }
+
+  /* ============================================================
+     THEME TOKENS
+     ============================================================ */
+  .theme {
+    --radius-card: 22px;
+    --radius-sm: 14px;
+    --radius-pill: 999px;
+  }
+  /* --- Tema Biru & Kuning (light) --- */
+  .theme-blue {
+    --bg-a: 214 100% 98%;
+    --bg-b: 221 96% 93%;
+    --ink: 224 52% 15%;
+    --ink-soft: 223 22% 38%;
+    --muted: 222 18% 45%;  /* WCAG AA: passes on white glass + light-blue header bg */
+    --struct: 226 72% 30%;   /* deep navy - navbar/borders/structure */
+    --struct-2: 224 76% 46%;
+    --accent: 45 97% 52%;    /* sunny yellow - highlights/icons */
+    --cta-bg: 45 97% 52%;    /* CTA fill */
+    --cta-ink: 226 72% 16%;  /* dark navy text on yellow -> AA pass */
+    --card: 0 0% 100%;
+    --line: 221 42% 88%;
+    --glass-top: 255,255,255;
+    --glass-bot: 244,248,255;
+    --halo-1: 45 97% 60%;
+    --halo-2: 224 90% 62%;
+  }
+  /* --- Tema Putih & Hijau (light) --- */
+  .theme-emerald {
+    --bg-a: 160 60% 99%;
+    --bg-b: 152 52% 95%;
+    --ink: 174 45% 12%;
+    --ink-soft: 172 18% 32%;
+    --muted: 172 14% 38%;    /* WCAG AA safety margin on glass */
+    --struct: 163 86% 22%;   /* deep emerald - structure */
+    --struct-2: 160 84% 28%; /* WCAG AA: link/r-pts text on white + gradient light end */
+    --accent: 152 72% 42%;   /* emerald - highlights/icons */
+    --cta-bg: 162 84% 24%;   /* deep emerald fill -> white text AA pass */
+    --cta-ink: 0 0% 100%;
+    --card: 0 0% 100%;
+    --line: 158 34% 87%;
+    --glass-top: 255,255,255;
+    --glass-bot: 240,252,247;
+    --halo-1: 152 72% 55%;
+    --halo-2: 168 70% 45%;
+  }
+
+  /* ============================================================
+     DEVICE FRAMES
+     ============================================================ */
+  /* Desktop browser frame */
+  .browser {
+    width: 100%; max-width: 560px;
+    border-radius: 18px; overflow: hidden;
+    background: hsl(var(--bg-a));
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,.65), 0 6px 20px rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .browser-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: hsl(var(--struct) / .96);
+  }
+  .tl-dots { display: flex; gap: 6px; }
+  .tl-dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .tl-dots i:nth-child(1){ background:#ff5f57; } .tl-dots i:nth-child(2){ background:#febc2e; } .tl-dots i:nth-child(3){ background:#28c840; }
+  .omnibox {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.14); color: #eaf1ff;
+    padding: 6px 12px; border-radius: 999px; font-size: 11.5px;
+    border: 1px solid rgba(255,255,255,.12);
+  }
+  .fav {
+    width: 16px; height: 16px; border-radius: 5px; flex: none;
+    display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 9px;
+    background: linear-gradient(135deg, hsl(var(--struct-2)), hsl(var(--accent)));
+  }
+  .omnibox .lock { opacity: .8; }
+
+  /* Phone frame */
+  .phone {
+    width: 320px; border-radius: 42px; padding: 10px;
+    background: linear-gradient(160deg,#20293b,#0d1220);
+    box-shadow: 0 40px 80px -28px rgba(0,0,0,.7), inset 0 0 0 2px rgba(255,255,255,.06);
+  }
+  .phone-screen {
+    position: relative; border-radius: 33px; overflow: hidden;
+    height: 660px; background: hsl(var(--bg-a));
+  }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 26px; background: #0d1220; border-radius: 0 0 16px 16px; z-index: 40;
+  }
+  .statusbar {
+    position: relative; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 20px 4px; font-size: 11px; font-weight: 700; color: hsl(var(--ink));
+  }
+  .statusbar .sb-right { display: flex; align-items: center; gap: 5px; }
+  .statusbar svg { width: 14px; height: 14px; }
+
+  .screen-scroll {
+    position: absolute; inset: 0; top: 28px; bottom: 0;
+    overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen-scroll::-webkit-scrollbar { width: 0; }
+
+  /* Shared app background mesh (inside device) */
+  .app-bg {
+    position: relative; min-height: 100%;
+    background:
+      radial-gradient(520px 320px at 8% -6%, hsl(var(--halo-1) / .28), transparent 60%),
+      radial-gradient(560px 340px at 108% 4%, hsl(var(--halo-2) / .22), transparent 58%),
+      linear-gradient(180deg, hsl(var(--bg-a)), hsl(var(--bg-b)));
+  }
+
+  /* ============================================================
+     GLASS + PRIMITIVES
+     ============================================================ */
+  .glass {
+    background: linear-gradient(150deg, rgba(var(--glass-top), .82), rgba(var(--glass-bot), .55));
+    backdrop-filter: blur(18px) saturate(165%);
+    -webkit-backdrop-filter: blur(18px) saturate(165%);
+    border: 1px solid rgba(255,255,255,.65);
+    box-shadow:
+      0 14px 34px -18px hsl(var(--struct) / .40),
+      inset 0 1px 0 rgba(255,255,255,.85);
+    border-radius: var(--radius-card);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .glass { background: rgba(255,255,255,.97); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  }
+
+  .app-ink { color: hsl(var(--ink)); }
+  .kicker {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 11px; font-weight: 700; letter-spacing: .02em;
+    color: hsl(var(--struct-2)); text-transform: none;
+  }
+  .card-title { font-size: 15px; font-weight: 700; color: hsl(var(--ink)); margin: 0; letter-spacing: -.01em; }
+  .muted { color: hsl(var(--muted)); }
+
+  .icon-chip {
+    width: 38px; height: 38px; border-radius: 12px; flex: none;
+    display: grid; place-items: center; color: #fff;
+    background: linear-gradient(140deg, hsl(var(--struct-2)), hsl(var(--struct)));
+    box-shadow: 0 8px 18px -8px hsl(var(--struct) / .8), inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .icon-chip.accent {
+    background: linear-gradient(140deg, hsl(var(--accent)), hsl(var(--accent) / .8));
+    color: hsl(var(--cta-ink));
+  }
+  .icon-chip svg { width: 19px; height: 19px; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    background: hsl(var(--struct) / .08); color: hsl(var(--struct-2));
+    border: 1px solid hsl(var(--struct) / .12);
+  }
+  .pill.name { background: hsl(var(--accent) / .16); color: hsl(var(--ink)); border-color: hsl(var(--accent) / .35); }
+
+  .btn-cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 10px 16px; border: none; cursor: pointer;
+    border-radius: 999px; font-family: var(--font); font-weight: 700; font-size: 13px;
+    background: hsl(var(--cta-bg)); color: hsl(var(--cta-ink));
+    box-shadow: 0 12px 22px -10px hsl(var(--cta-bg) / .8), inset 0 1px 0 rgba(255,255,255,.35);
+    transition: transform .16s cubic-bezier(.16,1,.3,1), filter .16s;
+  }
+  .btn-cta:hover { filter: brightness(1.05); }
+  .btn-cta:active { transform: translateY(1px) scale(.98); }
+  .btn-cta svg { width: 15px; height: 15px; }
+
+  .btn-ghost {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 9px 14px; border-radius: 999px; cursor: pointer;
+    font-family: var(--font); font-weight: 600; font-size: 12.5px;
+    color: hsl(var(--struct-2)); background: rgba(255,255,255,.6);
+    border: 1px solid hsl(var(--struct) / .18);
+  }
+  .link { color: hsl(var(--struct-2)); font-weight: 700; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; }
+  .link svg { width: 13px; height: 13px; }
+
+  .divide > * + * { border-top: 1px solid hsl(var(--line)); }
+
+  /* ============================================================
+     APP HEADER (mobile) + SIDEBAR (desktop)
+     ============================================================ */
+  .app-header {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; margin-bottom: 2px;
+    background: linear-gradient(180deg, hsl(var(--bg-a) / .92), hsl(var(--bg-a) / .55));
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid hsl(var(--line));
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark {
+    width: 36px; height: 36px; border-radius: 12px; flex: none;
+    display: grid; place-items: center; color: #fff; position: relative;
+    background: linear-gradient(140deg, hsl(var(--struct)), hsl(var(--struct-2)));
+    box-shadow: 0 8px 18px -8px hsl(var(--struct) / .8), inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .brand-mark svg { width: 20px; height: 20px; }
+  .brand-name { font-size: 15px; font-weight: 800; letter-spacing: -.02em; color: hsl(var(--ink)); line-height: 1; }
+  .brand-sub { font-size: 10px; font-weight: 600; color: hsl(var(--muted)); margin-top: 3px; letter-spacing: .01em; }
+  .hdr-actions { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 12px; border: 1px solid hsl(var(--line));
+    background: rgba(255,255,255,.6); color: hsl(var(--struct-2));
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .crest {
+    width: 30px; height: 30px; border-radius: 8px; flex: none;
+    display: grid; place-items: center; font-size: 7px; line-height: 1.05; text-align: center; font-weight: 700;
+    color: hsl(var(--struct-2)); background: hsl(var(--struct) / .08);
+    border: 1px dashed hsl(var(--struct) / .35);
+  }
+
+  .app-main { padding: 14px 14px 90px; display: grid; gap: 16px; }
+
+  /* Segment label */
+  .seg {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    margin: 4px 2px -4px;
+  }
+  .seg h3 { font-size: 12.5px; font-weight: 800; letter-spacing: .01em; color: hsl(var(--ink)); margin: 0; }
+
+  /* Welcome / control banner */
+  .control {
+    position: relative; overflow: hidden; padding: 16px;
+    color: #fff; border-radius: var(--radius-card);
+    background:
+      radial-gradient(280px 160px at 88% -20%, hsl(var(--accent) / .5), transparent 60%),
+      linear-gradient(140deg, hsl(var(--struct)), hsl(var(--struct-2)));
+    box-shadow: 0 20px 40px -20px hsl(var(--struct) / .9), inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  .control .hi { font-size: 12px; font-weight: 600; opacity: .9; }
+  .control .cls { font-size: 20px; font-weight: 800; letter-spacing: -.02em; margin: 2px 0 8px; }
+  .control .urgent {
+    display: flex; align-items: center; gap: 9px; margin-top: 12px; padding: 10px 12px;
+    background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.25);
+    border-radius: 14px; backdrop-filter: blur(6px);
+  }
+  .control .urgent .u-ico { color: hsl(var(--accent)); flex: none; }
+  .control .urgent svg { width: 17px; height: 17px; }
+  .control .urgent p { margin: 0; font-size: 12px; line-height: 1.35; }
+  .control .urgent strong { font-weight: 700; }
+
+  /* Points / rank banner */
+  .rank {
+    display: flex; align-items: center; gap: 12px; padding: 14px;
+  }
+  .rank .trophy {
+    width: 46px; height: 46px; border-radius: 14px; flex: none; display: grid; place-items: center;
+    color: hsl(var(--cta-ink)); background: linear-gradient(140deg, hsl(var(--accent)), hsl(var(--accent) / .75));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  .rank .trophy svg { width: 24px; height: 24px; }
+  .rank .r-main { display: flex; align-items: baseline; gap: 6px; }
+  .rank .r-num { font-size: 22px; font-weight: 800; color: hsl(var(--ink)); letter-spacing: -.02em; }
+  .rank .r-of { font-size: 12px; color: hsl(var(--muted)); font-weight: 600; }
+  .rank .r-pts { font-size: 12px; color: hsl(var(--struct-2)); font-weight: 700; }
+
+  /* Activity cards */
+  .card-pad { padding: 15px; }
+  .card-row { display: flex; align-items: flex-start; gap: 11px; }
+  .stack-sm { display: grid; gap: 4px; }
+
+  .task {
+    padding: 12px 13px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,.5); border: 1px solid hsl(var(--line));
+  }
+  .task + .task { margin-top: 9px; }
+  .task-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .task-sub { font-size: 13px; font-weight: 600; color: hsl(var(--ink)); margin: 7px 0 0; line-height: 1.35; }
+  .deadline { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: hsl(var(--struct-2)); }
+  .deadline.hot { color: #c2410c; }
+  .deadline svg { width: 13px; height: 13px; }
+
+  /* Checkbox draw (Lottie-pen approximation) */
+  .cbox { width: 20px; height: 20px; flex: none; }
+  .cbox rect { fill: none; stroke: hsl(var(--struct) / .4); stroke-width: 2.4; }
+  .cbox path {
+    fill: none; stroke: hsl(var(--accent)); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 22; stroke-dashoffset: 22;
+    animation: draw 2.6s ease-in-out infinite;
+  }
+  @keyframes draw {
+    0%, 12% { stroke-dashoffset: 22; }
+    38%, 72% { stroke-dashoffset: 0; }
+    92%, 100% { stroke-dashoffset: 22; }
+  }
+
+  /* Bell ring (Lottie-bell approximation) */
+  .bell { transform-origin: 50% 12%; animation: ring 3.4s ease-in-out infinite; color: #fff; }
+  @keyframes ring {
+    0%, 60%, 100% { transform: rotate(0); }
+    66% { transform: rotate(12deg); } 72% { transform: rotate(-9deg); }
+    78% { transform: rotate(6deg); } 84% { transform: rotate(-4deg); } 90% { transform: rotate(0); }
+  }
+
+  /* Timeline (Jadwal Mapel) */
+  .timeline { position: relative; padding-left: 6px; }
+  .tl-item { position: relative; display: flex; gap: 12px; padding: 9px 0; }
+  .tl-item::before {
+    content: ""; position: absolute; left: 17px; top: 30px; bottom: -9px; width: 2px;
+    background: hsl(var(--line));
+  }
+  .tl-item:last-child::before { display: none; }
+  .tl-node {
+    width: 36px; height: 36px; border-radius: 11px; flex: none; z-index: 1;
+    display: grid; place-items: center; color: hsl(var(--struct-2));
+    background: hsl(var(--struct) / .08); border: 1px solid hsl(var(--struct) / .16);
+  }
+  .tl-item.now .tl-node {
+    color: hsl(var(--cta-ink)); border: none;
+    background: linear-gradient(140deg, hsl(var(--struct-2)), hsl(var(--struct)));
+    box-shadow: 0 0 0 4px hsl(var(--accent) / .3);
+  }
+  .tl-node svg { width: 18px; height: 18px; }
+  .tl-body { flex: 1; padding-top: 1px; }
+  .tl-time { font-size: 11px; font-weight: 700; color: hsl(var(--muted)); }
+  .tl-name { font-size: 13.5px; font-weight: 700; color: hsl(var(--ink)); }
+  .now-tag {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    color: hsl(var(--cta-ink)); background: hsl(var(--cta-bg));
+    padding: 2px 7px; border-radius: 999px; margin-left: 7px;
+  }
+
+  /* Piket names */
+  .names { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+
+  /* Live session card */
+  .session {
+    position: relative; overflow: hidden; padding: 15px; color: #fff;
+    border-radius: var(--radius-card);
+    background:
+      radial-gradient(220px 220px at 85% 110%, hsl(var(--accent) / .35), transparent 60%),
+      linear-gradient(135deg, hsl(var(--struct)), hsl(224 60% 22%));
+  }
+  .theme-emerald .session { background: radial-gradient(220px 220px at 85% 110%, hsl(var(--accent) / .35), transparent 60%), linear-gradient(135deg, hsl(var(--struct)), hsl(168 70% 14%)); }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800;
+    letter-spacing: .06em; text-transform: uppercase; color: #fff;
+    background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.3);
+    padding: 4px 9px; border-radius: 999px;
+  }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 0 #34d399; animation: pulse 2s infinite; }
+  .theme-blue .live-dot { background: hsl(var(--accent)); box-shadow: 0 0 0 0 hsl(var(--accent)); }
+  @keyframes pulse { 0%{ box-shadow: 0 0 0 0 currentColor; } 70%{ box-shadow: 0 0 0 8px transparent; } 100%{ box-shadow: 0 0 0 0 transparent; } }
+  .planet {
+    position: absolute; right: -8px; top: -8px; width: 92px; height: 92px; opacity: .9;
+    animation: float 7s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{ transform: translateY(0) rotate(0); } 50%{ transform: translateY(7px) rotate(8deg); } }
+  .session h4 { margin: 10px 0 3px; font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+  .session .s-meta { font-size: 12px; opacity: .85; }
+  .session-actions { display: flex; gap: 8px; margin-top: 13px; }
+  .session .btn-cta { box-shadow: 0 10px 20px -10px rgba(0,0,0,.6); }
+  .session .btn-ghost { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.3); }
+
+  /* Bottom nav (mobile) */
+  .bottom-nav {
+    position: sticky; bottom: 0; z-index: 25;
+    display: grid; grid-template-columns: repeat(5,1fr);
+    padding: 8px 8px calc(8px + 4px);
+    background: linear-gradient(180deg, hsl(var(--bg-b) / .4), hsl(var(--card) / .92));
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid hsl(var(--line));
+  }
+  .nav-i { display: grid; justify-items: center; gap: 3px; padding: 5px 0; color: hsl(var(--muted)); font-size: 9.5px; font-weight: 600; }
+  .nav-i svg { width: 20px; height: 20px; }
+  .nav-i.active { color: hsl(var(--struct-2)); }
+  .nav-i.active .ni {
+    background: hsl(var(--struct) / .1); border-radius: 11px;
+  }
+  .ni { padding: 5px 14px; border-radius: 11px; }
+
+  /* ============================================================
+     DESKTOP LAYOUT (inside browser frame)
+     ============================================================ */
+  .d-shell { display: grid; grid-template-columns: 66px 1fr; height: 452px; }
+  .sidebar {
+    background: linear-gradient(180deg, hsl(var(--struct)), hsl(var(--struct) / .92));
+    padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .sidebar .s-brand {
+    width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; color: hsl(var(--struct));
+    background: #fff; margin-bottom: 12px; box-shadow: 0 6px 14px rgba(0,0,0,.3);
+  }
+  .sidebar .s-brand svg { width: 22px; height: 22px; }
+  .s-link {
+    width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center;
+    color: rgba(255,255,255,.72); position: relative; cursor: pointer;
+    transition: background .18s, color .18s, box-shadow .18s;
+  }
+  .s-link svg { width: 20px; height: 20px; }
+  .s-link:hover { color: #fff; background: rgba(255,255,255,.12); }
+  .s-link.active { color: hsl(var(--struct)); background: #fff; box-shadow: 0 0 0 3px hsl(var(--accent) / .55), 0 8px 16px -6px rgba(0,0,0,.4); }
+  .s-spacer { flex: 1; }
+
+  .d-body { overflow: hidden; display: flex; flex-direction: column; }
+  .d-topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 18px; border-bottom: 1px solid hsl(var(--line));
+    background: hsl(var(--bg-a) / .7); backdrop-filter: blur(10px);
+  }
+  .d-title { font-size: 15px; font-weight: 800; color: hsl(var(--ink)); letter-spacing: -.01em; }
+  .d-title small { display: block; font-size: 10.5px; font-weight: 600; color: hsl(var(--muted)); margin-top: 2px; }
+  .d-search {
+    display: flex; align-items: center; gap: 8px; flex: 1; max-width: 230px;
+    padding: 8px 12px; border-radius: 999px; margin-left: auto;
+    background: rgba(255,255,255,.7); border: 1px solid hsl(var(--line)); color: hsl(var(--muted)); font-size: 12px;
+  }
+  .d-search svg { width: 15px; height: 15px; }
+  .d-avatar {
+    width: 34px; height: 34px; border-radius: 11px; flex: none; display: grid; place-items: center;
+    font-size: 12px; font-weight: 800; color: #fff;
+    background: linear-gradient(140deg, hsl(var(--struct-2)), hsl(var(--accent)));
+  }
+  .d-content {
+    padding: 14px; overflow-y: auto; display: grid; gap: 12px;
+    grid-template-columns: 1.35fr 1fr;
+    background: linear-gradient(180deg, hsl(var(--bg-a)), hsl(var(--bg-b)));
+  }
+  .d-content::-webkit-scrollbar { width: 6px; }
+  .d-content::-webkit-scrollbar-thumb { background: hsl(var(--struct) / .2); border-radius: 999px; }
+  .span-2 { grid-column: 1 / -1; }
+
+  /* Small helper */
+  .row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .mt6{margin-top:6px;} .mt10{margin-top:10px;} .mt12{margin-top:12px;}
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .foot {
+    text-align: center; color: #8595b4; font-size: 12.5px; margin-top: 46px; line-height: 1.7;
+  }
+  .foot code { background: hsl(220 30% 30% / .5); padding: 2px 7px; border-radius: 6px; color: #d6e0f5; font-size: 11.5px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bell, .cbox path, .planet, .live-dot { animation: none !important; }
+    .cbox path { stroke-dashoffset: 0; }
+    .btn-cta { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <header class="board-head">
+    <span class="board-eyebrow"><i data-lucide="sparkles"></i> Perombakan Total Dasbor Kelas</span>
+    <h1>ClassHub, dua tema dalam satu papan banding</h1>
+    <p>Redesign dasbor kelas XI Saintek 2, MAN 2 Mataram. Mobile-first, glassmorphism halus, hirarki konten yang jelas: Pengumuman, Tugas, Piket, dan Jadwal terbaca dalam sekejap. Kiri dan kanan memakai konten yang sama, hanya temanya berbeda.</p>
+    <div class="legend">
+      <span><span class="swatch" style="background:#1e3a8a"></span> Struktur biru tua</span>
+      <span><span class="swatch" style="background:#facc15"></span> Aksi kuning matahari</span>
+      <span><span class="swatch" style="background:#0b6e4f"></span> Struktur emerald</span>
+      <span><span class="swatch" style="background:#10b981"></span> Sorotan hijau</span>
+    </div>
+  </header>
+
+  <div class="compare-wrap">
+    <div class="vs">VS</div>
+    <div class="compare">
+
+      <!-- ============ THEME A: BLUE + YELLOW ============ -->
+      <section class="theme theme-blue">
+        <div class="col-head">
+          <span class="col-dot" style="background:linear-gradient(140deg,#1e3a8a,#facc15)"></span>
+          <div>
+            <h2>Tema Terang Utama</h2>
+            <p>Biru tua untuk struktur, kuning matahari untuk aksi</p>
+          </div>
+        </div>
+
+        <div class="device-stack">
+
+          <!-- DESKTOP -->
+          <div class="browser">
+            <div class="browser-bar">
+              <div class="tl-dots"><i></i><i></i><i></i></div>
+              <div class="omnibox"><span class="fav">C</span><span class="lock" data-lucide="lock"></span> classhub.man2mataram.sch.id/kelas</div>
+            </div>
+            <div class="d-shell">
+              <aside class="sidebar">
+                <div class="s-brand"><i data-lucide="graduation-cap"></i></div>
+                <div class="s-link active" title="Beranda"><i data-lucide="layout-dashboard"></i></div>
+                <div class="s-link" title="Pengumuman"><i data-lucide="megaphone"></i></div>
+                <div class="s-link" title="Tugas"><i data-lucide="clipboard-list"></i></div>
+                <div class="s-link" title="Jadwal"><i data-lucide="calendar-days"></i></div>
+                <div class="s-link" title="Piket"><i data-lucide="brush"></i></div>
+                <div class="s-link" title="Kas"><i data-lucide="wallet"></i></div>
+                <div class="s-link" title="Galeri"><i data-lucide="images"></i></div>
+                <div class="s-spacer"></div>
+                <div class="s-link" title="Akun"><i data-lucide="circle-user"></i></div>
+              </aside>
+              <div class="d-body">
+                <div class="d-topbar">
+                  <div class="d-title">Pusat Kontrol Kelas<small>Jumat, 25 Juli 2026</small></div>
+                  <div class="d-search"><i data-lucide="search"></i> Cari tugas, nama, jadwal</div>
+                  <div class="d-avatar">HS</div>
+                </div>
+                <div class="d-content">
+                  <!-- welcome -->
+                  <div class="control span-2">
+                    <div class="row-between">
+                      <div>
+                        <div class="hi">Assalamualaikum, selamat pagi</div>
+                        <div class="cls">XI Saintek 2</div>
+                        <span class="pill" style="background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.3)"><i data-lucide="users" style="width:13px;height:13px"></i> 32 siswa aktif</span>
+                      </div>
+                      <div class="rank" style="padding:0">
+                        <div class="trophy"><i data-lucide="trophy"></i></div>
+                        <div>
+                          <div class="r-main"><span class="r-num" style="color:#fff">#2</span><span class="r-of" style="color:rgba(255,255,255,.8)">dari 12 kelas</span></div>
+                          <div class="r-pts" style="color:hsl(var(--accent))">1.240 poin kelas</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="urgent">
+                      <span class="u-ico" data-lucide="alert-circle"></span>
+                      <p><strong>Paling mendesak:</strong> Class meeting akhir semester mulai Senin. Bawa perlengkapan olahraga.</p>
+                    </div>
+                  </div>
+
+                  <!-- Pengumuman -->
+                  <div class="glass card-pad">
+                    <div class="card-row">
+                      <span class="icon-chip"><span class="bell" data-lucide="bell"></span></span>
+                      <div class="stack-sm" style="flex:1">
+                        <div class="row-between"><h4 class="card-title">Pengumuman Kelas</h4><a class="link">Semua <i data-lucide="arrow-right"></i></a></div>
+                        <p class="muted" style="font-size:12px;margin:0">Class meeting akhir semester mulai Senin depan. Perlengkapan olahraga wajib dibawa.</p>
+                        <span class="pill" style="margin-top:4px"><i data-lucide="shield-check" style="width:13px;height:13px"></i> Ketua Kelas</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tugas -->
+                  <div class="glass card-pad">
+                    <div class="row-between">
+                      <span class="kicker"><span class="icon-chip accent" style="width:30px;height:30px;border-radius:10px"><i data-lucide="clipboard-list" style="width:16px;height:16px"></i></span> Daftar Tugas</span>
+                      <a class="link">3 aktif</a>
+                    </div>
+                    <div class="mt10">
+                      <div class="task">
+                        <div class="task-top"><span class="pill">Fisika</span><span class="deadline hot"><i data-lucide="clock"></i> 27 Jul</span></div>
+                        <div style="display:flex;gap:9px;align-items:flex-start" class="mt6">
+                          <svg class="cbox" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7 12.5l3.2 3.2L17 8.5"/></svg>
+                          <p class="task-sub" style="margin:0">Laporan praktikum GLBB, kumpulkan format PDF</p>
+                        </div>
+                      </div>
+                      <div class="task">
+                        <div class="task-top"><span class="pill">Kimia</span><span class="deadline"><i data-lucide="clock"></i> 28 Jul</span></div>
+                        <p class="task-sub">Latihan soal stoikiometri bab 4, nomor ganjil</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Jadwal timeline -->
+                  <div class="glass card-pad">
+                    <div class="row-between"><h4 class="card-title">Jadwal Mapel Hari Ini</h4><span class="pill"><i data-lucide="calendar-days" style="width:13px;height:13px"></i> 4 sesi</span></div>
+                    <div class="timeline mt10">
+                      <div class="tl-item now">
+                        <div class="tl-node"><i data-lucide="atom"></i></div>
+                        <div class="tl-body"><div class="tl-time">07:15 - 08:45</div><div class="tl-name">Fisika<span class="now-tag">Sekarang</span></div></div>
+                      </div>
+                      <div class="tl-item">
+                        <div class="tl-node"><i data-lucide="flask-conical"></i></div>
+                        <div class="tl-body"><div class="tl-time">08:45 - 10:15</div><div class="tl-name">Kimia</div></div>
+                      </div>
+                      <div class="tl-item">
+                        <div class="tl-node"><i data-lucide="microscope"></i></div>
+                        <div class="tl-body"><div class="tl-time">10:30 - 12:00</div><div class="tl-name">Biologi</div></div>
+                      </div>
+                      <div class="tl-item">
+                        <div class="tl-node"><i data-lucide="languages"></i></div>
+                        <div class="tl-body"><div class="tl-time">13:00 - 14:30</div><div class="tl-name">Bahasa Inggris</div></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Piket -->
+                  <div class="glass card-pad">
+                    <div class="card-row">
+                      <span class="icon-chip accent"><i data-lucide="brush"></i></span>
+                      <div style="flex:1">
+                        <h4 class="card-title">Piket Hari Ini</h4>
+                        <div class="names">
+                          <span class="pill name">Aisyah Nur</span>
+                          <span class="pill name">Rizky Ramadhan</span>
+                          <span class="pill name">Dewi Lestari</span>
+                          <span class="pill name">Fahri Ihsan</span>
+                          <span class="pill name">Salsabila Putri</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Session -->
+                  <div class="session span-2">
+                    <svg class="planet" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="26" fill="rgba(255,255,255,.16)"/><circle cx="50" cy="50" r="26" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><ellipse cx="50" cy="50" rx="44" ry="13" stroke="hsl(var(--accent))" stroke-width="2.5" transform="rotate(-24 50 50)"/><circle cx="41" cy="43" r="4" fill="rgba(255,255,255,.5)"/></svg>
+                    <span class="live-badge"><span class="live-dot"></span> Sesi berlangsung</span>
+                    <h4>Fisika, Gerak Lurus Berubah Beraturan</h4>
+                    <div class="s-meta">Bersama Bu Rahmawati, S.Pd &middot; Lab IPA 2 &middot; 07:15 - 08:45</div>
+                    <div class="session-actions">
+                      <button class="btn-cta">Lihat Detail <i data-lucide="arrow-right"></i></button>
+                      <button class="btn-ghost">Materi</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PHONE -->
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="notch"></div>
+              <div class="statusbar">
+                <span>09:41</span>
+                <span class="sb-right"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+              </div>
+              <div class="screen-scroll">
+                <div class="app-bg">
+                  <header class="app-header">
+                    <div class="brand">
+                      <span class="brand-mark"><i data-lucide="graduation-cap"></i></span>
+                      <div><div class="brand-name">ClassHub</div><div class="brand-sub">MAN 2 Mataram</div></div>
+                    </div>
+                    <div class="hdr-actions">
+                      <div class="crest">MAN 2<br>crest</div>
+                      <button class="icon-btn"><i data-lucide="menu"></i></button>
+                    </div>
+                  </header>
+
+                  <main class="app-main">
+                    <!-- Segment 1 -->
+                    <div class="control">
+                      <div class="hi">Assalamualaikum, selamat pagi</div>
+                      <div class="cls">XI Saintek 2</div>
+                      <div class="urgent">
+                        <span class="u-ico" data-lucide="alert-circle"></span>
+                        <p><strong>Mendesak:</strong> Class meeting mulai Senin. Bawa perlengkapan olahraga.</p>
+                      </div>
+                    </div>
+
+                    <div class="glass rank">
+                      <div class="trophy"><i data-lucide="trophy"></i></div>
+                      <div style="flex:1">
+                        <div class="r-main"><span class="r-num">#2</span><span class="r-of">dari 12 kelas</span></div>
+                        <div class="r-pts">1.240 poin kelas pekan ini</div>
+                      </div>
+                      <i data-lucide="chevron-right" style="width:18px;height:18px;color:hsl(var(--muted))"></i>
+                    </div>
+
+                    <!-- Segment 2 -->
+                    <div class="seg"><h3>Aktivitas Penting</h3></div>
+
+                    <div class="glass card-pad">
+                      <div class="card-row">
+                        <span class="icon-chip"><span class="bell" data-lucide="bell"></span></span>
+                        <div style="flex:1">
+                          <div class="row-between"><h4 class="card-title">Pengumuman Kelas</h4><a class="link">Semua <i data-lucide="arrow-right"></i></a></div>
+                          <p class="muted" style="font-size:12.5px;margin:6px 0 0">Class meeting akhir semester mulai Senin depan. Perlengkapan olahraga wajib dibawa.</p>
+                          <span class="pill" style="margin-top:8px"><i data-lucide="shield-check" style="width:13px;height:13px"></i> Ketua Kelas</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="glass card-pad">
+                      <div class="row-between">
+                        <span class="kicker"><span class="icon-chip accent" style="width:30px;height:30px;border-radius:10px"><i data-lucide="clipboard-list" style="width:16px;height:16px"></i></span> Daftar Tugas</span>
+                        <a class="link">Lihat semua</a>
+                      </div>
+                      <div class="mt10">
+                        <div class="task">
+                          <div class="task-top"><span class="pill">Fisika</span><span class="deadline hot"><i data-lucide="clock"></i> 27 Jul</span></div>
+                          <div style="display:flex;gap:9px;align-items:flex-start" class="mt6">
+                            <svg class="cbox" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7 12.5l3.2 3.2L17 8.5"/></svg>
+                            <p class="task-sub" style="margin:0">Laporan praktikum GLBB, format PDF</p>
+                          </div>
+                        </div>
+                        <div class="task">
+                          <div class="task-top"><span class="pill">Kimia</span><span class="deadline"><i data-lucide="clock"></i> 28 Jul</span></div>
+                          <p class="task-sub">Latihan stoikiometri bab 4, nomor ganjil</p>
+                        </div>
+                        <div class="task">
+                          <div class="task-top"><span class="pill">B. Inggris</span><span class="deadline"><i data-lucide="clock"></i> 30 Jul</span></div>
+                          <p class="task-sub">Essay "My Future Career", 250 kata</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Segment 3 -->
+                    <div class="seg"><h3>Jadwal dan Rotasi</h3></div>
+
+                    <div class="glass card-pad">
+                      <div class="row-between"><h4 class="card-title">Jadwal Mapel</h4><span class="pill"><i data-lucide="calendar-days" style="width:13px;height:13px"></i> 4 sesi</span></div>
+                      <div class="timeline mt10">
+                        <div class="tl-item now">
+                          <div class="tl-node"><i data-lucide="atom"></i></div>
+                          <div class="tl-body"><div class="tl-time">07:15 - 08:45</div><div class="tl-name">Fisika<span class="now-tag">Sekarang</span></div></div>
+                        </div>
+                        <div class="tl-item">
+                          <div class="tl-node"><i data-lucide="flask-conical"></i></div>
+                          <div class="tl-body"><div class="tl-time">08:45 - 10:15</div><div class="tl-name">Kimia</div></div>
+                        </div>
+                        <div class="tl-item">
+                          <div class="tl-node"><i data-lucide="microscope"></i></div>
+                          <div class="tl-body"><div class="tl-time">10:30 - 12:00</div><div class="tl-name">Biologi</div></div>
+                        </div>
+                        <div class="tl-item">
+                          <div class="tl-node"><i data-lucide="languages"></i></div>
+                          <div class="tl-body"><div class="tl-time">13:00 - 14:30</div><div class="tl-name">Bahasa Inggris</div></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="glass card-pad">
+                      <div class="card-row">
+                        <span class="icon-chip accent"><i data-lucide="brush"></i></span>
+                        <div style="flex:1">
+                          <h4 class="card-title">Piket Hari Ini</h4>
+                          <div class="names">
+                            <span class="pill name">Aisyah Nur</span>
+                            <span class="pill name">Rizky Ramadhan</span>
+                            <span class="pill name">Dewi Lestari</span>
+                            <span class="pill name">Fahri Ihsan</span>
+                            <span class="pill name">Salsabila Putri</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Segment 4 -->
+                    <div class="seg"><h3>Sesi Kelas Berlangsung</h3></div>
+                    <div class="session">
+                      <svg class="planet" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="26" fill="rgba(255,255,255,.16)"/><circle cx="50" cy="50" r="26" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><ellipse cx="50" cy="50" rx="44" ry="13" stroke="hsl(var(--accent))" stroke-width="2.5" transform="rotate(-24 50 50)"/><circle cx="41" cy="43" r="4" fill="rgba(255,255,255,.5)"/></svg>
+                      <span class="live-badge"><span class="live-dot"></span> Sesi berlangsung</span>
+                      <h4>Fisika, GLBB</h4>
+                      <div class="s-meta">Bu Rahmawati, S.Pd &middot; Lab IPA 2</div>
+                      <div class="session-actions">
+                        <button class="btn-cta">Lihat Detail <i data-lucide="arrow-right"></i></button>
+                        <button class="btn-ghost">Materi</button>
+                      </div>
+                    </div>
+                  </main>
+
+                  <nav class="bottom-nav">
+                    <div class="nav-i active"><span class="ni"><i data-lucide="home"></i></span>Home</div>
+                    <div class="nav-i"><span class="ni"><i data-lucide="clipboard-list"></i></span>Tugas</div>
+                    <div class="nav-i"><span class="ni"><i data-lucide="wallet"></i></span>Kas</div>
+                    <div class="nav-i"><span class="ni"><i data-lucide="images"></i></span>Galeri</div>
+                    <div class="nav-i"><span class="ni"><i data-lucide="circle-user"></i></span>Akun</div>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============ THEME B: WHITE + EMERALD ============ -->
+      <section class="theme theme-emerald">
+        <div class="col-head">
+          <span class="col-dot" style="background:linear-gradient(140deg,#0b6e4f,#10b981)"></span>
+          <div>
+            <h2>Tema Alternatif Bersih</h2>
+            <p>Putih murni dengan aksen emerald yang tenang</p>
+          </div>
+        </div>
+
+        <div class="device-stack">
+
+          <!-- DESKTOP -->
+          <div class="browser">
+            <div class="browser-bar">
+              <div class="tl-dots"><i></i><i></i><i></i></div>
+              <div class="omnibox"><span class="fav">C</span><span class="lock" data-lucide="lock"></span> classhub.man2mataram.sch.id/kelas</div>
+            </div>
+            <div class="d-shell">
+              <aside class="sidebar">
+                <div class="s-brand"><i data-lucide="graduation-cap"></i></div>
+                <div class="s-link active" title="Beranda"><i data-lucide="layout-dashboard"></i></div>
+                <div class="s-link" title="Pengumuman"><i data-lucide="megaphone"></i></div>
+                <div class="s-link" title="Tugas"><i data-lucide="clipboard-list"></i></div>
+                <div class="s-link" title="Jadwal"><i data-lucide="calendar-days"></i></div>
+                <div class="s-link" title="Piket"><i data-lucide="brush"></i></div>
+                <div class="s-link" title="Kas"><i data-lucide="wallet"></i></div>
+                <div class="s-link" title="Galeri"><i data-lucide="images"></i></div>
+                <div class="s-spacer"></div>
+                <div class="s-link" title="Akun"><i data-lucide="circle-user"></i></div>
+              </aside>
+              <div class="d-body">
+                <div class="d-topbar">
+                  <div class="d-title">Pusat Kontrol Kelas<small>Jumat, 25 Juli 2026</small></div>
+                  <div class="d-search"><i data-lucide="search"></i> Cari tugas, nama, jadwal</div>
+                  <div class="d-avatar">HS</div>
+                </div>
+                <div class="d-content">
+                  <div class="control span-2">
+                    <div class="row-between">
+                      <div>
+                        <div class="hi">Assalamualaikum, selamat pagi</div>
+                        <div class="cls">XI Saintek 2</div>
+                        <span class="pill" style="background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.3)"><i data-lucide="users" style="width:13px;height:13px"></i> 32 siswa aktif</span>
+                      </div>
+                      <div class="rank" style="padding:0">
+                        <div class="trophy"><i data-lucide="trophy"></i></div>
+                        <div>
+                          <div class="r-main"><span class="r-num" style="color:#fff">#2</span><span class="r-of" style="color:rgba(255,255,255,.8)">dari 12 kelas</span></div>
+                          <div class="r-pts" style="color:hsl(var(--accent))">1.240 poin kelas</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="urgent">
+                      <span class="u-ico" data-lucide="alert-circle"></span>
+                      <p><strong>Paling mendesak:</strong> Class meeting akhir semester mulai Senin. Bawa perlengkapan olahraga.</p>
+                    </div>
+                  </div>
+
+                  <div class="glass card-pad">
+                    <div class="card-row">
+                      <span class="icon-chip"><span class="bell" data-lucide="bell"></span></span>
+                      <div class="stack-sm" style="flex:1">
+                        <div class="row-between"><h4 class="card-title">Pengumuman Kelas</h4><a class="link">Semua <i data-lucide="arrow-right"></i></a></div>
+                        <p class="muted" style="font-size:12px;margin:0">Class meeting akhir semester mulai Senin depan. Perlengkapan olahraga wajib dibawa.</p>
+                        <span class="pill" style="margin-top:4px"><i data-lucide="shield-check" style="width:13px;height:13px"></i> Ketua Kelas</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="glass card-pad">
+                    <div class="row-between">
+                      <span class="kicker"><span class="icon-chip accent" style="width:30px;height:30px;border-radius:10px"><i data-lucide="clipboard-list" style="width:16px;height:16px"></i></span> Daftar Tugas</span>
+                      <a class="link">3 aktif</a>
+                    </div>
+                    <div class="mt10">
+                      <div class="task">
+                        <div class="task-top"><span class="pill">Fisika</span><span class="deadline hot"><i data-lucide="clock"></i> 27 Jul</span></div>
+                        <div style="display:flex;gap:9px;align-items:flex-start" class="mt6">
+                          <svg class="cbox" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7 12.5l3.2 3.2L17 8.5"/></svg>
+                          <p class="task-sub" style="margin:0">Laporan praktikum GLBB, kumpulkan format PDF</p>
+                        </div>
+                      </div>
+                      <div class="task">
+                        <div class="task-top"><span class="pill">Kimia</span><span class="deadline"><i data-lucide="clock"></i> 28 Jul</span></div>
+                        <p class="task-sub">Latihan soal stoikiometri bab 4, nomor ganjil</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="glass card-pad">
+                    <div class="row-between"><h4 class="card-title">Jadwal Mapel Hari Ini</h4><span class="pill"><i data-lucide="calendar-days" style="width:13px;height:13px"></i> 4 sesi</span></div>
+                    <div class="timeline mt10">
+                      <div class="tl-item now">
+                        <div class="tl-node"><i data-lucide="atom"></i></div>
+                        <div class="tl-body"><div class="tl-time">07:15 - 08:45</div><div class="tl-name">Fisika<span class="now-tag">Sekarang</span></div></div>
+                      </div>
+                      <div class="tl-item">
+                        <div class="tl-node"><i data-lucide="flask-conical"></i></div>
+                        <div class="tl-body"><div class="tl-time">08:45 - 10:15</div><div class="tl-name">Kimia</div></div>
+                      </div>
+                      <div class="tl-item">
+                        <div class="tl-node"><i data-lucide="microscope"></i></div>
+                        <div class="tl-body"><div class="tl-time">10:30 - 12:00</div><div class="tl-name">Biologi</div></div>
+                      </div>
+                      <div class="tl-item">
+                        <div class="tl-node"><i data-lucide="languages"></i></div>
+                        <div class="tl-body"><div class="tl-time">13:00 - 14:30</div><div class="tl-name">Bahasa Inggris</div></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="glass card-pad">
+                    <div class="card-row">
+                      <span class="icon-chip accent"><i data-lucide="brush"></i></span>
+                      <div style="flex:1">
+                        <h4 class="card-title">Piket Hari Ini</h4>
+                        <div class="names">
+                          <span class="pill name">Aisyah Nur</span>
+                          <span class="pill name">Rizky Ramadhan</span>
+                          <span class="pill name">Dewi Lestari</span>
+                          <span class="pill name">Fahri Ihsan</span>
+                          <span class="pill name">Salsabila Putri</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="session span-2">
+                    <svg class="planet" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="26" fill="rgba(255,255,255,.16)"/><circle cx="50" cy="50" r="26" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><ellipse cx="50" cy="50" rx="44" ry="13" stroke="hsl(var(--accent))" stroke-width="2.5" transform="rotate(-24 50 50)"/><circle cx="41" cy="43" r="4" fill="rgba(255,255,255,.5)"/></svg>
+                    <span class="live-badge"><span class="live-dot"></span> Sesi berlangsung</span>
+                    <h4>Fisika, Gerak Lurus Berubah Beraturan</h4>
+                    <div class="s-meta">Bersama Bu Rahmawati, S.Pd &middot; Lab IPA 2 &middot; 07:15 - 08:45</div>
+                    <div class="session-actions">
+                      <button class="btn-cta">Lihat Detail <i data-lucide="arrow-right"></i></button>
+                      <button class="btn-ghost">Materi</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PHONE -->
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="notch"></div>
+              <div class="statusbar">
+                <span>09:41</span>
+                <span class="sb-right"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+              </div>
+              <div class="screen-scroll">
+                <div class="app-bg">
+                  <header class="app-header">
+                    <div class="brand">
+                      <span class="brand-mark"><i data-lucide="graduation-cap"></i></span>
+                      <div><div class="brand-name">ClassHub</div><div class="brand-sub">MAN 2 Mataram</div></div>
+                    </div>
+                    <div class="hdr-actions">
+                      <div class="crest">MAN 2<br>crest</div>
+                      <button class="icon-btn"><i data-lucide="menu"></i></button>
+                    </div>
+                  </header>
+
+                  <main class="app-main">
+                    <div class="control">
+                      <div class="hi">Assalamualaikum, selamat pagi</div>
+                      <div class="cls">XI Saintek 2</div>
+                      <div class="urgent">
+                        <span class="u-ico" data-lucide="alert-circle"></span>
+                        <p><strong>Mendesak:</strong> Class meeting mulai Senin. Bawa perlengkapan olahraga.</p>
+                      </div>
+                    </div>
+
+                    <div class="glass rank">
+                      <div class="trophy"><i data-lucide="trophy"></i></div>
+                      <div style="flex:1">
+                        <div class="r-main"><span class="r-num">#2</span><span class="r-of">dari 12 kelas</span></div>
+                        <div class="r-pts">1.240 poin kelas pekan ini</div>
+                      </div>
+                      <i data-lucide="chevron-right" style="width:18px;height:18px;color:hsl(var(--muted))"></i>
+                    </div>
+
+                    <div class="seg"><h3>Aktivitas Penting</h3></div>
+
+                    <div class="glass card-pad">
+                      <div class="card-row">
+                        <span class="icon-chip"><span class="bell" data-lucide="bell"></span></span>
+                        <div style="flex:1">
+                          <div class="row-between"><h4 class="card-title">Pengumuman Kelas</h4><a class="link">Semua <i data-lucide="arrow-right"></i></a></div>
+                          <p class="muted" style="font-size:12.5px;margin:6px 0 0">Class meeting akhir semester mulai Senin depan. Perlengkapan olahraga wajib dibawa.</p>
+                          <span class="pill" style="margin-top:8px"><i data-lucide="shield-check" style="width:13px;height:13px"></i> Ketua Kelas</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="glass card-pad">
+                      <div class="row-between">
+                        <span class="kicker"><span class="icon-chip accent" style="width:30px;height:30px;border-radius:10px"><i data-lucide="clipboard-list" style="width:16px;height:16px"></i></span> Daftar Tugas</span>
+                        <a class="link">Lihat semua</a>
+                      </div>
+                      <div class="mt10">
+                        <div class="task">
+                          <div class="task-top"><span class="pill">Fisika</span><span class="deadline hot"><i data-lucide="clock"></i> 27 Jul</span></div>
+                          <div style="display:flex;gap:9px;align-items:flex-start" class="mt6">
+                            <svg class="cbox" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7 12.5l3.2 3.2L17 8.5"/></svg>
+                            <p class="task-sub" style="margin:0">Laporan praktikum GLBB, format PDF</p>
+                          </div>
+                        </div>
+                        <div class="task">
+                          <div class="task-top"><span class="pill">Kimia</span><span class="deadline"><i data-lucide="clock"></i> 28 Jul</span></div>
+                          <p class="task-sub">Latihan stoikiometri bab 4, nomor ganjil</p>
+                        </div>
+                        <div class="task">
+                          <div class="task-top"><span class="pill">B. Inggris</span><span class="deadline"><i data-lucide="clock"></i> 30 Jul</span></div>
+                          <p class="task-sub">Essay "My Future Career", 250 kata</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="seg"><h3>Jadwal dan Rotasi</h3></div>
+
+                    <div class="glass card-pad">
+                      <div class="row-between"><h4 class="card-title">Jadwal Mapel</h4><span class="pill"><i data-lucide="calendar-days" style="width:13px;height:13px"></i> 4 sesi</span></div>
+                      <div class="timeline mt10">
+                        <div class="tl-item now">
+                          <div class="tl-node"><i data-lucide="atom"></i></div>
+                          <div class="tl-body"><div class="tl-time">07:15 - 08:45</div><div class="tl-name">Fisika<span class="now-tag">Sekarang</span></div></div>
+                        </div>
+                        <div class="tl-item">
+                          <div class="tl-node"><i data-lucide="flask-conical"></i></div>
+                          <div class="tl-body"><div class="tl-time">08:45 - 10:15</div><div class="tl-name">Kimia</div></div>
+                        </div>
+                        <div class="tl-item">
+                          <div class="tl-node"><i data-lucide="microscope"></i></div>
+                          <div class="tl-body"><div class="tl-time">10:30 - 12:00</div><div class="tl-name">Biologi</div></div>
+                        </div>
+                        <div class="tl-item">
+                          <div class="tl-node"><i data-lucide="languages"></i></div>
+                          <div class="tl-body"><div class="tl-time">13:00 - 14:30</div><div class="tl-name">Bahasa Inggris</div></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="glass card-pad">
+                      <div class="card-row">
+                        <span class="icon-chip accent"><i data-lucide="brush"></i></span>
+                        <div style="flex:1">
+                          <h4 class="card-title">Piket Hari Ini</h4>
+                          <div class="names">
+                            <span class="pill name">Aisyah Nur</span>
+                            <span class="pill name">Rizky Ramadhan</span>
+                            <span class="pill name">Dewi Lestari</span>
+                            <span class="pill name">Fahri Ihsan</span>
+                            <span class="pill name">Salsabila Putri</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="seg"><h3>Sesi Kelas Berlangsung</h3></div>
+                    <div class="session">
+                      <svg class="planet" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="26" fill="rgba(255,255,255,.16)"/><circle cx="50" cy="50" r="26" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><ellipse cx="50" cy="50" rx="44" ry="13" stroke="hsl(var(--accent))" stroke-width="2.5" transform="rotate(-24 50 50)"/><circle cx="41" cy="43" r="4" fill="rgba(255,255,255,.5)"/></svg>
+                      <span class="live-badge"><span class="live-dot"></span> Sesi berlangsung</span>
+                      <h4>Fisika, GLBB</h4>
+                      <div class="s-meta">Bu Rahmawati, S.Pd &middot; Lab IPA 2</div>
+                      <div class="session-actions">
+                        <button class="btn-cta">Lihat Detail <i data-lucide="arrow-right"></i></button>
+                        <button class="btn-ghost">Materi</button>
+                      </div>
+                    </div>
+                  </main>
+
+                  <nav class="bottom-nav">
+                    <div class="nav-i active"><span class="ni"><i data-lucide="home"></i></span>Home</div>
+                    <div class="nav-i"><span class="ni"><i data-lucide="clipboard-list"></i></span>Tugas</div>
+                    <div class="nav-i"><span class="ni"><i data-lucide="wallet"></i></span>Kas</div>
+                    <div class="nav-i"><span class="ni"><i data-lucide="images"></i></span>Galeri</div>
+                    <div class="nav-i"><span class="ni"><i data-lucide="circle-user"></i></span>Akun</div>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <p class="foot">
+    Konten memakai data kelas asli (XI Saintek 2, MAN 2 Mataram). Ikon dari Lucide, animasi lonceng / centang / planet memakai CSS sebagai pengganti Lottie sampai aset asli tersedia.<br>
+    Ganti kotak <code>MAN 2 crest</code> dengan lambang sekolah asli. Untuk produksi Next.js: muat font lewat <code>next/font</code>, bukan tag &lt;link&gt;.
+  </p>
+
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  // Real Lucide icon family (this project depends on lucide-react).
+  if (window.lucide) { lucide.createIcons(); }
+</script>
+</body>
+</html>
