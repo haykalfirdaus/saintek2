@@ -258,9 +258,21 @@
   .pt-safe {
     padding-top: env(safe-area-inset-top, 0px);
   }
-  /* Reserve room for the fixed bottom nav (thumb zone) */
+  /* Reserve room for the fixed bottom nav (thumb zone). On desktop the bottom
+     nav is gone (sidebar takes over) so the reserve collapses to normal space. */
   .pb-nav {
     padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+  @screen lg {
+    .pb-nav {
+      padding-bottom: 2.5rem;
+    }
+  }
+  /* Clear the fixed desktop sidebar rail (84px). No-op on mobile. */
+  @screen lg {
+    .pl-rail {
+      padding-left: 84px;
+    }
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -284,6 +296,104 @@
   transform-origin: 50% 15%;
   animation: ch-ring 3.6s ease-in-out infinite;
 }
+
+/* Gentle float — brand mark, orbit badges, "sesi berlangsung" planet. */
+@keyframes ch-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.ch-float { animation: ch-float 4s ease-in-out infinite; }
+.ch-float-slow { animation: ch-float 6s ease-in-out infinite; }
+
+/* Sweeping brush — piket icon. */
+@keyframes ch-sweep {
+  0%, 100% { transform: rotate(-9deg); }
+  50% { transform: rotate(9deg); }
+}
+.ch-sweep {
+  transform-origin: 50% 90%;
+  animation: ch-sweep 2.4s ease-in-out infinite;
+}
+
+/* Soft glow pulse — the active navigation icon. */
+@keyframes ch-glow {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.45); }
+  50% { box-shadow: 0 0 18px 2px hsl(var(--primary) / 0.4); }
+}
+.ch-glow { animation: ch-glow 2.8s ease-in-out infinite; }
+
+/* Entrance reveal — content rises + fades once on load. Stagger via
+   inline animation-delay from the page. */
+@keyframes ch-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.ch-rise { animation: ch-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Slow orbit ring — decorative, behind the live-session planet. */
+@keyframes ch-orbit {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+.ch-orbit { animation: ch-orbit 14s linear infinite; }
+
+/* Hover-lift for glass cards (pointer devices only). */
+@media (hover: hover) {
+  .glass-lift {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .glass-lift:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 22px 46px -20px hsl(var(--shadow-color) / 0.5),
+      inset 0 1px 0 hsl(var(--card) / 0.85);
+  }
+}
+
+/* Reduced-motion: kill every looping/entrance animation, keep content visible. */
 @media (prefers-reduced-motion: reduce) {
-  .ch-bell { animation: none; }
+  .ch-bell,
+  .ch-float,
+  .ch-float-slow,
+  .ch-sweep,
+  .ch-glow,
+  .ch-orbit { animation: none; }
+  .ch-rise { animation: none; opacity: 1; transform: none; }
+  .glass-lift { transition: none; }
+}
+
+/*
+  Desktop sidebar rail — thin, glowing, expands on hover to reveal labels.
+  Overlays content on expand (fixed + high z) so nothing reflows. Hidden on
+  mobile, where BottomNav takes over.
+*/
+.rail {
+  width: 84px;
+  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (hover: hover) {
+  .rail:hover { width: 224px; }
+  .rail:hover .rail-label { opacity: 1; transform: translateX(0); }
+}
+.rail-label {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rail { transition: none; }
+  .rail-label { transition: none; }
+}
+
+/* Shared page-content width: mobile column that opens up on desktop. */
+.app-container {
+  @apply mx-auto w-full max-w-md px-4;
+}
+@screen lg {
+  .app-container {
+    max-width: 72rem; /* 6xl */
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }

@@ -1,6 +1,6 @@
-import { BottomNav } from '@/components/bottom-nav'
+import { AppShell } from '@/components/app-shell'
 import { KasClient } from './kas-client'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/page-header'
 import { createPublicClient } from '@/lib/supabase/public'
 import { getJakartaNow, toISODate } from '@/lib/utils'
 import { Wallet } from 'lucide-react'
@@ -37,19 +37,14 @@ export default async function KasPage() {
   Object.values(byStudent).forEach((arr) => arr.sort((a, b) => a.week_date.localeCompare(b.week_date)))
 
   return (
-    <div className="pb-nav mx-auto min-h-dvh max-w-md">
-      <header className="pt-safe sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur-lg">
-        <h1 className="flex items-center gap-2 text-lg font-bold">
-          <Wallet className="h-5 w-5 text-primary" /> Kas Kelas
-        </h1>
-        <ThemeToggle />
-      </header>
+    <AppShell>
+      <PageHeader icon={Wallet} title="Kas Kelas" />
 
-      <main className="px-4 py-5">
-        <KasClient rows={arrears ?? []} payments={byStudent} currentWeek={currentWeek} />
+      <main className="app-container pb-nav py-5">
+        <div className="ch-rise">
+          <KasClient rows={arrears ?? []} payments={byStudent} currentWeek={currentWeek} />
+        </div>
       </main>
-
-      <BottomNav />
-    </div>
+    </AppShell>
   )
 }

@@ -2,10 +2,10 @@ import { HeaderSkeleton, CardListSkeleton, Skeleton } from '@/components/skeleto
 
 export default function Loading() {
   return (
-    <div className="pb-nav mx-auto min-h-dvh max-w-md">
+    <div className="app-mesh pl-rail min-h-dvh">
       <HeaderSkeleton />
-      <main className="space-y-6 px-4 py-5">
-        <Skeleton className="h-12 w-full rounded-lg" />
+      <main className="app-container pb-nav space-y-6 py-5">
+        <Skeleton className="h-12 w-full rounded-lg lg:w-40" />
         <CardListSkeleton count={3} />
       </main>
     </div>

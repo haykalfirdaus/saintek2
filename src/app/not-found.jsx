@@ -1,13 +1,16 @@
 import Link from 'next/link'
+import { AppShell } from '@/components/app-shell'
 
 export default function NotFound() {
   return (
-    <div className="mx-auto grid min-h-dvh max-w-md place-items-center px-6 text-center">
-      <div>
-        <p className="text-6xl font-black text-primary">404</p>
-        <p className="mt-2 text-lg font-semibold">Halaman tidak ditemukan</p>
-        <Link href="/" className="btn-primary mt-6 inline-flex">Kembali ke Beranda</Link>
+    <AppShell>
+      <div className="pb-nav grid min-h-dvh place-items-center px-6 text-center">
+        <div className="ch-rise">
+          <p className="text-6xl font-black text-primary">404</p>
+          <p className="mt-2 text-lg font-semibold">Halaman tidak ditemukan</p>
+          <Link href="/" className="btn-primary mt-6 inline-flex">Kembali ke Beranda</Link>
+        </div>
       </div>
-    </div>
+    </AppShell>
   )
 }

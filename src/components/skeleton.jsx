@@ -7,9 +7,11 @@ export function Skeleton({ className = '' }) {
 // Skeleton untuk header halaman (judul + toggle).
 export function HeaderSkeleton() {
   return (
-    <div className="pt-safe sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur-lg">
-      <Skeleton className="h-6 w-40" />
-      <Skeleton className="h-10 w-10 rounded-lg" />
+    <div className="pt-safe sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-lg">
+      <div className="app-container flex items-center justify-between py-3">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-10 w-10 rounded-lg lg:hidden" />
+      </div>
     </div>
   )
 }

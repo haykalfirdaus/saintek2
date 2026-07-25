@@ -39,24 +39,28 @@ export function KasReminder() {
   if (!info || closed) return null
 
   return (
-    <div className="mx-4 mt-4 flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-amber-800 dark:text-amber-200">
-      <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
-        <Wallet className="h-5 w-5" />
-      </span>
-      <div className="min-w-0 flex-1 text-sm">
-        <p className="font-semibold">Halo {info.nama}, waktunya bayar kas nih… 💰</p>
-        <p className="mt-0.5">
-          Kas kamu belum dibayar sebanyak{' '}
-          <span className="font-bold">{formatRupiah(info.arrears)}</span>.
-        </p>
+    // Sejajarkan dengan header & konten utama lewat .app-container (lebar sama
+    // di mobile maupun desktop) alih-alih mx-4 lama yang meleset saat lebar.
+    <div className="app-container mt-4">
+      <div className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-amber-800 dark:text-amber-200">
+        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+          <Wallet className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1 text-sm">
+          <p className="font-semibold">Halo {info.nama}, waktunya bayar kas nih… 💰</p>
+          <p className="mt-0.5">
+            Kas kamu belum dibayar sebanyak{' '}
+            <span className="font-bold">{formatRupiah(info.arrears)}</span>.
+          </p>
+        </div>
+        <button
+          onClick={() => setClosed(true)}
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-amber-700/70 transition hover:bg-amber-500/20 dark:text-amber-300/70"
+          aria-label="Tutup"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
-      <button
-        onClick={() => setClosed(true)}
-        className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-amber-700/70 transition hover:bg-amber-500/20 dark:text-amber-300/70"
-        aria-label="Tutup"
-      >
-        <X className="h-4 w-4" />
-      </button>
     </div>
   )
 }

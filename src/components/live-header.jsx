@@ -20,11 +20,11 @@ export function LiveHeader({ mapelHariIni = [], libur = null }) {
 
   return (
     <header className="pt-safe sticky top-0 z-30 border-b border-border bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto max-w-md px-4 py-3">
-        {/* Brand row */}
+      <div className="app-container py-3">
+        {/* Brand row — logo hidden on desktop (SideNav already shows it). */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-elevated">
+          <div className="flex items-center gap-2.5 lg:hidden">
+            <span className="ch-float grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-elevated">
               <GraduationCap className="h-5 w-5" />
             </span>
             <div className="leading-none">
@@ -34,7 +34,13 @@ export function LiveHeader({ mapelHariIni = [], libur = null }) {
               </p>
             </div>
           </div>
-          <ThemeToggle />
+          {/* Desktop: greeting fills the space the logo left. */}
+          <p className="hidden text-sm font-semibold text-muted-foreground lg:block">
+            Selamat datang di dasbor kelas
+          </p>
+          <div className="lg:hidden">
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* Date */}

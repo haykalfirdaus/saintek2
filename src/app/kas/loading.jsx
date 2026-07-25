@@ -2,9 +2,9 @@ import { HeaderSkeleton, Skeleton } from '@/components/skeleton'
 
 export default function Loading() {
   return (
-    <div className="pb-nav mx-auto min-h-dvh max-w-md">
+    <div className="app-mesh pl-rail min-h-dvh">
       <HeaderSkeleton />
-      <main className="space-y-4 px-4 py-5">
+      <main className="app-container pb-nav space-y-4 py-5">
         <Skeleton className="h-24 w-full rounded-lg" />
         <div className="flex gap-2">
           <Skeleton className="h-10 flex-1 rounded-lg" />

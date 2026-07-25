@@ -1,6 +1,6 @@
-import { BottomNav } from '@/components/bottom-nav'
+import { AppShell } from '@/components/app-shell'
 import { TaskCard } from '@/components/task-card'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/page-header'
 import { createPublicClient } from '@/lib/supabase/public'
 import { ClipboardList } from 'lucide-react'
 
@@ -16,35 +16,28 @@ export default async function TugasPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="pb-nav mx-auto min-h-dvh max-w-md">
-      <header className="pt-safe sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur-lg">
-        <h1 className="flex items-center gap-2 text-lg font-bold">
-          <ClipboardList className="h-5 w-5 text-primary" /> Tugas
-        </h1>
-        <ThemeToggle />
-      </header>
+    <AppShell>
+      <PageHeader icon={ClipboardList} title="Tugas" />
 
-      <main className="space-y-6 px-4 py-5">
-        <section>
+      <main className="app-container pb-nav space-y-6 py-5">
+        <section className="ch-rise">
           <p className="section-title">Aktif</p>
           {aktif?.length ? (
-            <div className="space-y-3">{aktif.map((t) => <TaskCard key={t.id} task={t} />)}</div>
+            <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">{aktif.map((t) => <TaskCard key={t.id} task={t} />)}</div>
           ) : (
             <p className="card p-4 text-sm text-muted-foreground">Tidak ada tugas aktif.</p>
           )}
         </section>
 
-        <section>
+        <section className="ch-rise" style={{ animationDelay: '80ms' }}>
           <p className="section-title">Riwayat</p>
           {riwayat?.length ? (
-            <div className="space-y-3 opacity-80">{riwayat.map((t) => <TaskCard key={t.id} task={t} />)}</div>
+            <div className="grid gap-3 opacity-80 lg:grid-cols-2 xl:grid-cols-3">{riwayat.map((t) => <TaskCard key={t.id} task={t} />)}</div>
           ) : (
             <p className="card p-4 text-sm text-muted-foreground">Belum ada riwayat.</p>
           )}
         </section>
       </main>
-
-      <BottomNav />
-    </div>
+    </AppShell>
   )
 }

@@ -1,5 +1,5 @@
 import { LiveHeader } from '@/components/live-header'
-import { BottomNav } from '@/components/bottom-nav'
+import { AppShell } from '@/components/app-shell'
 import { AnnouncementPopup } from '@/components/announcement-popup'
 import { GallerySlider } from '@/components/gallery-slider'
 import { ZoomableImage } from '@/components/zoomable-image'
@@ -29,21 +29,24 @@ export default async function HomePage() {
   const data = await getLandingData()
 
   return (
-    <div className="app-mesh pb-nav mx-auto min-h-dvh max-w-md">
+    <AppShell>
       <AnnouncementPopup popup={data.popup} />
       <LiveHeader mapelHariIni={data.mapelHariIni} libur={data.holiday || (data.isLibur ? {} : null)} />
 
       <KasReminder />
 
-      <main className="space-y-6 px-4 py-5">
+      <main className="app-container pb-nav space-y-6 py-5 lg:grid lg:grid-cols-12 lg:gap-6 lg:space-y-0">
+        {/* ===== KOLOM UTAMA (desktop): Aktivitas + Jadwal ===== */}
+        <div className="space-y-6 lg:col-span-8">
         {/* ============ SEGMEN: AKTIVITAS PENTING ============ */}
-        <section className="space-y-3">
+        <section className="ch-rise space-y-3">
           <div className="segment-label">
             <h2>Aktivitas Penting</h2>
           </div>
 
+          <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
           {/* PENGUMUMAN */}
-          <div className="glass p-4">
+          <div className="glass glass-lift p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="flex items-center gap-2.5">
                 <span className="icon-chip h-9 w-9">
@@ -105,16 +108,18 @@ export default async function HomePage() {
               <p className="text-sm text-muted-foreground">Tidak ada tugas aktif.</p>
             )}
           </div>
+          </div>
         </section>
 
         {/* ============ SEGMEN: JADWAL DAN ROTASI ============ */}
-        <section className="space-y-3">
+        <section className="ch-rise space-y-3" style={{ animationDelay: '80ms' }}>
           <div className="segment-label">
             <h2>Jadwal dan Rotasi</h2>
           </div>
 
+          <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
           {/* JADWAL MAPEL (timeline) */}
-          <div className="glass p-4">
+          <div className="glass glass-lift p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="flex items-center gap-2.5">
                 <span className="icon-chip h-9 w-9">
@@ -159,10 +164,10 @@ export default async function HomePage() {
           </div>
 
           {/* PIKET */}
-          <div className="glass p-4">
+          <div className="glass glass-lift p-4">
             <div className="mb-3 flex items-center gap-2.5">
               <span className="icon-chip-accent h-9 w-9">
-                <Brush className="h-[18px] w-[18px]" />
+                <Brush className="ch-sweep h-[18px] w-[18px]" />
               </span>
               <span className="text-[15px] font-bold">Piket Hari Ini</span>
             </div>
@@ -183,16 +188,20 @@ export default async function HomePage() {
               <p className="text-sm text-muted-foreground">Belum ada jadwal piket.</p>
             )}
           </div>
+          </div>
         </section>
+        </div>
 
+        {/* ===== KOLOM SAMPING (desktop): Kas + Galeri ===== */}
+        <div className="space-y-6 lg:col-span-4">
         {/* ============ SEGMEN: KAS & GALERI ============ */}
-        <section className="space-y-3">
+        <section className="ch-rise space-y-3" style={{ animationDelay: '160ms' }}>
           <div className="segment-label">
             <h2>Kas dan Galeri</h2>
           </div>
 
           {/* KAS */}
-          <div className="glass p-4">
+          <div className="glass glass-lift p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="flex items-center gap-2.5">
                 <span className="icon-chip h-9 w-9">
@@ -261,7 +270,7 @@ export default async function HomePage() {
           </div>
 
           {/* GALERI SINGKAT */}
-          <div className="glass p-4">
+          <div className="glass glass-lift p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="flex items-center gap-2.5">
                 <span className="icon-chip-accent h-9 w-9">
@@ -276,9 +285,8 @@ export default async function HomePage() {
             <GallerySlider photos={data.galeri.slice(0, 10)} />
           </div>
         </section>
+        </div>
       </main>
-
-      <BottomNav />
-    </div>
+    </AppShell>
   )
 }

@@ -1,7 +1,7 @@
-import { BottomNav } from '@/components/bottom-nav'
+import { AppShell } from '@/components/app-shell'
 import { GallerySlider } from '@/components/gallery-slider'
 import { ZoomableImage } from '@/components/zoomable-image'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/page-header'
 import { createPublicClient } from '@/lib/supabase/public'
 import { Images } from 'lucide-react'
 
@@ -22,26 +22,21 @@ export default async function GaleriPage() {
   const statis = all.filter((p) => !sliderIds.has(p.id)).slice(0, 4)
 
   return (
-    <div className="pb-nav mx-auto min-h-dvh max-w-md">
-      <header className="pt-safe sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur-lg">
-        <h1 className="flex items-center gap-2 text-lg font-bold">
-          <Images className="h-5 w-5 text-primary" /> Galeri Foto
-        </h1>
-        <ThemeToggle />
-      </header>
+    <AppShell>
+      <PageHeader icon={Images} title="Galeri Foto" />
 
-      <main className="space-y-6 px-4 py-5">
-        <section>
+      <main className="app-container pb-nav space-y-6 py-5">
+        <section className="ch-rise mx-auto max-w-3xl">
           <p className="section-title">Slideshow Otomatis</p>
           <GallerySlider photos={slider} />
         </section>
 
-        <section>
+        <section className="ch-rise" style={{ animationDelay: '80ms' }}>
           <p className="section-title">Frame Statis</p>
           {statis.length ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {statis.map((p) => (
-                <div key={p.id} className="card overflow-hidden">
+                <div key={p.id} className="card glass-lift overflow-hidden">
                   <ZoomableImage src={p.url} alt={p.caption || ''} className="aspect-square w-full object-cover" />
                   {p.caption && <p className="px-2 py-1 text-xs text-muted-foreground">{p.caption}</p>}
                 </div>
@@ -52,8 +47,6 @@ export default async function GaleriPage() {
           )}
         </section>
       </main>
-
-      <BottomNav />
-    </div>
+    </AppShell>
   )
 }

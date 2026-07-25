@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { BottomNav } from '@/components/bottom-nav'
+import { AppShell } from '@/components/app-shell'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Toast } from '@/components/ui-bits'
 import { UploadField } from '@/components/upload-field'
@@ -137,9 +137,9 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
   }
 
   return (
-    <div className="pb-nav mx-auto min-h-dvh w-full max-w-md">
+    <AppShell>
       <header className="pt-safe sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-lg">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/15 text-primary">
               <CircleUser className="h-5 w-5" />
@@ -152,7 +152,9 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <ThemeToggle />
+            <div className="lg:hidden">
+              <ThemeToggle />
+            </div>
             <button className="btn-ghost h-10 px-3 text-sm" onClick={signOut}>
               <LogOut className="h-4 w-4" /> Keluar
             </button>
@@ -160,7 +162,7 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
         </div>
       </header>
 
-      <main className="space-y-5 px-4 py-5">
+      <main className="pb-nav mx-auto w-full max-w-2xl space-y-5 px-4 py-5">
         <Toast {...(toast || {})} />
 
         {/* Admin shortcut */}
@@ -288,8 +290,6 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
           </button>
         </section>
       </main>
-
-      <BottomNav />
-    </div>
+    </AppShell>
   )
 }
