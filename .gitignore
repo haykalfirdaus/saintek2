@@ -13,6 +13,9 @@ next-env.d.ts
 .env
 .env.local
 .env*.local
+# Template pun sengaja tidak diupload (permintaan pemilik repo).
+# Tetap ada di lokal sebagai acuan; jangan hapus dari disk.
+.env.example
 
 # misc
 .DS_Store
