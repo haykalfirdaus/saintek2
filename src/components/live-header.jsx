@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { CalendarDays, Palmtree, GraduationCap } from 'lucide-react'
 import { formatTanggalLengkap, getJakartaNow } from '@/lib/utils'
 import { subjectIcon } from '@/lib/subject-icons'
-import { ThemeToggle } from './theme-toggle'
+import { MobileDrawer } from './mobile-drawer'
 
 // Real-time date/day header (WITA). Updates every 30s. ClassHub branding.
 export function LiveHeader({ mapelHariIni = [], libur = null }) {
@@ -38,9 +38,8 @@ export function LiveHeader({ mapelHariIni = [], libur = null }) {
           <p className="hidden text-sm font-semibold text-muted-foreground lg:block">
             Selamat datang di dasbor kelas
           </p>
-          <div className="lg:hidden">
-            <ThemeToggle />
-          </div>
+          {/* Mobile: hamburger opens the nav drawer (theme lives inside it). */}
+          <MobileDrawer />
         </div>
 
         {/* Date */}

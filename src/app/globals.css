@@ -362,6 +362,16 @@
   .glass-lift { transition: none; }
 }
 
+/* Mobile drawer: backdrop fade + panel slide-in from the left. */
+@keyframes ch-drawer-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.ch-drawer-panel { animation: ch-drawer-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .ch-drawer-panel { animation: none; }
+}
+
 /*
   Desktop sidebar rail — thin, glowing, expands on hover to reveal labels.
   Overlays content on expand (fixed + high z) so nothing reflows. Hidden on

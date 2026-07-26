@@ -1,10 +1,11 @@
-import { ThemeToggle } from './theme-toggle'
+import { MobileDrawer } from './mobile-drawer'
 
 /*
   Shared sticky header for inner pages (Tugas, Kas, Galeri...).
-  Widens with the content on desktop and drops the theme toggle there, since
-  the SideNav rail already carries one. `right` lets a page inject extra
-  controls (e.g. the Akun logout button).
+  Widens with the content on desktop. On mobile the hamburger opens the nav
+  drawer (which carries the theme switch); on desktop the SideNav rail owns
+  both nav and theme, so no control is needed here. `right` lets a page inject
+  extra controls (e.g. the Akun logout button).
 */
 export function PageHeader({ icon: Icon, title, right = null }) {
   return (
@@ -15,9 +16,7 @@ export function PageHeader({ icon: Icon, title, right = null }) {
         </h1>
         <div className="flex items-center gap-2">
           {right}
-          <div className="lg:hidden">
-            <ThemeToggle />
-          </div>
+          <MobileDrawer />
         </div>
       </div>
     </header>

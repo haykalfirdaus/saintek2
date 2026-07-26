@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { AppShell } from '@/components/app-shell'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { MobileDrawer } from '@/components/mobile-drawer'
 import { Toast } from '@/components/ui-bits'
 import { UploadField } from '@/components/upload-field'
 import { PasswordInput } from '@/components/password-input'
@@ -152,12 +152,10 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="lg:hidden">
-              <ThemeToggle />
-            </div>
             <button className="btn-ghost h-10 px-3 text-sm" onClick={signOut}>
               <LogOut className="h-4 w-4" /> Keluar
             </button>
+            <MobileDrawer />
           </div>
         </div>
       </header>
