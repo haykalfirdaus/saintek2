@@ -7,6 +7,7 @@ import { TaskCard } from '@/components/task-card'
 import { RoleBadge } from '@/components/ui-bits'
 import { KasReminder } from '@/components/kas-reminder'
 import { subjectIcon } from '@/lib/subject-icons'
+import { LottieIcon } from '@/components/lottie-icon'
 import { getLandingData } from '@/lib/data'
 import { formatRupiah } from '@/lib/utils'
 import {
@@ -50,7 +51,7 @@ export default async function HomePage() {
             <div className="mb-3 flex items-center justify-between">
               <span className="flex items-center gap-2.5">
                 <span className="icon-chip h-9 w-9">
-                  <Megaphone className="ch-bell h-[18px] w-[18px]" />
+                  <LottieIcon src="/lottie/bell.json" fallback={Megaphone} className="h-[18px] w-[18px]" />
                 </span>
                 <span className="text-[15px] font-bold">Pengumuman Kelas</span>
               </span>
@@ -90,7 +91,7 @@ export default async function HomePage() {
             <div className="mb-3 flex items-center justify-between">
               <span className="flex items-center gap-2.5">
                 <span className="icon-chip-accent h-9 w-9">
-                  <ClipboardList className="h-[18px] w-[18px]" />
+                  <LottieIcon src="/lottie/check.json" fallback={ClipboardList} className="h-[18px] w-[18px]" />
                 </span>
                 <span className="text-[15px] font-bold">Daftar Tugas</span>
               </span>
@@ -167,7 +168,7 @@ export default async function HomePage() {
           <div className="glass glass-lift p-4">
             <div className="mb-3 flex items-center gap-2.5">
               <span className="icon-chip-accent h-9 w-9">
-                <Brush className="ch-sweep h-[18px] w-[18px]" />
+                <LottieIcon src="/lottie/broom.json" fallback={Brush} className="h-[18px] w-[18px]" />
               </span>
               <span className="text-[15px] font-bold">Piket Hari Ini</span>
             </div>
