@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { GraduationCap, Menu, X } from 'lucide-react'
@@ -67,7 +68,7 @@ export function MobileDrawer() {
         <Menu className="h-5 w-5" />
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           className="fixed inset-0 z-[60] lg:hidden"
           role="dialog"
@@ -147,7 +148,8 @@ export function MobileDrawer() {
               <ThemeToggle />
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

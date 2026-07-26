@@ -106,9 +106,12 @@ export function LottieIcon({ src, children, loop = true, className = '' }) {
   }, [src, loop])
 
   return (
-    <span className={`relative grid place-items-center ${className}`}>
+    <span className={`relative inline-flex items-center justify-center ${className}`}>
       {!active && children}
-      <span ref={hostRef} aria-hidden="true" className={active ? 'h-full w-full' : 'sr-only'} />
+      {/* Absolute inset-0 gives the Lottie SVG a DEFINITE box (matches the
+          wrapper size). A percentage-height host inside a place-items-center
+          grid collapses to 0 — the SVG has no intrinsic px to fall back on. */}
+      <span ref={hostRef} aria-hidden="true" className={active ? 'absolute inset-0 block' : 'sr-only'} />
     </span>
   )
 }
