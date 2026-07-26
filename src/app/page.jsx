@@ -51,7 +51,9 @@ export default async function HomePage() {
             <div className="mb-3 flex items-center justify-between">
               <span className="flex items-center gap-2.5">
                 <span className="icon-chip h-9 w-9">
-                  <LottieIcon src="/lottie/bell.json" fallback={Megaphone} className="h-[18px] w-[18px]" />
+                  <LottieIcon src="/lottie/bell.json" className="h-[18px] w-[18px]">
+                    <Megaphone className="h-full w-full" />
+                  </LottieIcon>
                 </span>
                 <span className="text-[15px] font-bold">Pengumuman Kelas</span>
               </span>
@@ -91,7 +93,9 @@ export default async function HomePage() {
             <div className="mb-3 flex items-center justify-between">
               <span className="flex items-center gap-2.5">
                 <span className="icon-chip-accent h-9 w-9">
-                  <LottieIcon src="/lottie/check.json" fallback={ClipboardList} className="h-[18px] w-[18px]" />
+                  <LottieIcon src="/lottie/check.json" className="h-[18px] w-[18px]">
+                    <ClipboardList className="h-full w-full" />
+                  </LottieIcon>
                 </span>
                 <span className="text-[15px] font-bold">Daftar Tugas</span>
               </span>
@@ -168,7 +172,9 @@ export default async function HomePage() {
           <div className="glass glass-lift p-4">
             <div className="mb-3 flex items-center gap-2.5">
               <span className="icon-chip-accent h-9 w-9">
-                <LottieIcon src="/lottie/broom.json" fallback={Brush} className="h-[18px] w-[18px]" />
+                <LottieIcon src="/lottie/broom.json" className="h-[18px] w-[18px]">
+                  <Brush className="h-full w-full" />
+                </LottieIcon>
               </span>
               <span className="text-[15px] font-bold">Piket Hari Ini</span>
             </div>

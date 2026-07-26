@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from 'react'
 /*
   Lottie micro-interaction with a graceful, accessible fallback.
 
-  - SSR / first paint: renders the provided Lucide `fallback` icon so there is
-    never a blank box and no hydration mismatch.
+  - SSR / first paint: renders `children` (a Lucide icon element) so there is
+    never a blank box and no hydration mismatch. We take the fallback as an
+    already-rendered element (children), NOT a component type — a Server
+    Component cannot serialize a function/forwardRef across the client boundary.
   - prefers-reduced-motion: stays on the static fallback, never loads Lottie.
   - Otherwise: lazy-loads lottie-web (light SVG player) + the JSON, plays only
     while the element is on screen (IntersectionObserver), pauses off-screen.
@@ -15,11 +17,11 @@ import { useEffect, useRef, useState } from 'react'
 
   Props:
     src       path under /public (e.g. "/lottie/bell.json")
-    fallback  a Lucide icon component (shown before/without animation)
+    children  the static fallback icon element (e.g. <Megaphone className="h-full w-full" />)
     loop      loop the animation (default true)
     className sizing/color classes on the wrapper (its color drives the art)
 */
-export function LottieIcon({ src, fallback: Fallback, loop = true, className = '' }) {
+export function LottieIcon({ src, children, loop = true, className = '' }) {
   const hostRef = useRef(null)
   const animRef = useRef(null)
   const [active, setActive] = useState(false)
@@ -105,7 +107,7 @@ export function LottieIcon({ src, fallback: Fallback, loop = true, className = '
 
   return (
     <span className={`relative grid place-items-center ${className}`}>
-      {Fallback && !active && <Fallback className="h-full w-full" />}
+      {!active && children}
       <span ref={hostRef} aria-hidden="true" className={active ? 'h-full w-full' : 'sr-only'} />
     </span>
   )
