@@ -12,7 +12,7 @@ import { PasswordInput } from '@/components/password-input'
 import { ROLE_LABEL } from '@/lib/roles'
 import {
   CircleUser, LogOut, MapPin, Loader2, CheckCircle2, ShieldCheck,
-  UserCog, Mail, KeyRound, IdCard, FileText, HeartPulse, CalendarClock,
+  UserCog, Mail, KeyRound, IdCard, FileText, HeartPulse, CalendarClock, CalendarOff,
 } from 'lucide-react'
 
 const STATUS_LABEL = {
@@ -42,6 +42,9 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
 
   const todayISO = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Makassar' })
   const sudahAbsen = attendance?.tanggal === todayISO
+  // Absensi libur hari Minggu (0 = Minggu di zona WITA). Cocokkan dengan guard
+  // di RPC check_in/self_report (extract dow = 0), jadi UI & server sepakat.
+  const isMinggu = new Date(todayISO + 'T00:00:00').getDay() === 0
 
   async function signOut() {
     await supabase.auth.signOut()
@@ -59,6 +62,7 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
   // ---- Absen HADIR via Geolocation ----
   function absenHadir() {
     if (!student) return notify('Akun tidak terhubung ke data siswa.', 'error')
+    if (isMinggu) return notify('Absensi libur hari Minggu. Hanya Senin sampai Sabtu.', 'error')
     if (!('geolocation' in navigator)) return notify('Perangkat tidak mendukung lokasi.', 'error')
     if (!window.confirm('Absen HADIR sekarang?\n\nSetelah absen tercatat, kamu TIDAK bisa mengubahnya sendiri (terkunci). Hanya developer yang bisa mengubah.')) return
     setLocating(true)
@@ -86,6 +90,7 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
   // ---- Absen IZIN / SAKIT / DISPEN (self report) ----
   async function submitReport() {
     if (!reportType) return
+    if (isMinggu) return notify('Absensi libur hari Minggu. Hanya Senin sampai Sabtu.', 'error')
     if (!desc.trim()) return notify('Isi deskripsi dulu.', 'error')
     if (!window.confirm(`Ajukan ${STATUS_LABEL[reportType]} sekarang?\n\nSetelah dikirim, absen TIDAK bisa kamu ubah lagi (terkunci). Hanya developer yang bisa mengubah.`)) return
     setSubmitting(true)
@@ -204,6 +209,17 @@ export function AccountClient({ email, student, isAdmin, adminRole, initialAtten
                 )}
                 <p className="text-center text-xs text-muted-foreground">
                   Absen terkunci. Hanya developer yang bisa mengubah.
+                </p>
+              </div>
+            ) : isMinggu ? (
+              /* Minggu: absensi libur, tidak ada tombol absen. */
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-center gap-2 rounded-lg bg-muted px-3 py-3 text-sm font-semibold text-muted-foreground">
+                  <CalendarOff className="h-5 w-5" />
+                  Absensi libur hari Minggu
+                </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Absen hanya dibuka Senin sampai Sabtu.
                 </p>
               </div>
             ) : reportType ? (
