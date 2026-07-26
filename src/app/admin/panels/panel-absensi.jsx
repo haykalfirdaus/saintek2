@@ -6,7 +6,7 @@ import { PanelHeader, Toast } from '@/components/ui-bits'
 import { exportToExcel } from '@/lib/export-excel'
 import {
   CalendarCheck, ChevronLeft, ChevronRight, Download, Loader2,
-  Users, Trash2, X, CheckCheck,
+  Users, Trash2, X, CheckCheck, CalendarOff,
 } from 'lucide-react'
 
 // Label & warna status.
@@ -63,6 +63,11 @@ export function PanelAbsensi({ role }) {
     return { from: iso(s), to: iso(e) }
   }, [mode, anchor])
 
+  // Hari yang sedang dilihat jatuh di Minggu? (mode hari saja). Kalau ya,
+  // absensi libur -> edit dikunci untuk SEMUA role, sama seperti guru.
+  const isMingguHari = mode === 'hari' && new Date(range.from + 'T00:00:00').getDay() === 0
+  const editable = canEdit && !isMingguHari
+
   const load = useCallback(async () => {
     setLoading(true)
     const { data, error } = await supabase.rpc('attendance_range', { p_from: range.from, p_to: range.to })
@@ -99,6 +104,7 @@ export function PanelAbsensi({ role }) {
   // Set/ubah status manual. Via RPC agar field geo/self di-reset.
   // Jika record lama punya foto surat, hapus filenya dari Storage.
   async function setStatus(studentId, tanggal, status) {
+    if (isMingguHari) return notify('Absensi libur hari Minggu. Tidak bisa diubah.', 'error')
     const old = todayMap.get(studentId)
     const { error } = await supabase.rpc('dev_set_attendance', {
       p_student: studentId, p_tanggal: tanggal, p_status: status,
@@ -112,6 +118,7 @@ export function PanelAbsensi({ role }) {
   // Tidak menimpa yang sudah absen (mis. geo/izin/sakit) — biar data asli aman.
   const [bulkLoading, setBulkLoading] = useState(false)
   async function markAllHadir() {
+    if (isMingguHari) return notify('Absensi libur hari Minggu. Tidak bisa diubah.', 'error')
     const tanggal = range.from
     const belum = students.filter((s) => !todayMap.has(s.id))
     if (!belum.length) return notify('Semua siswa sudah punya catatan absen.', 'error')
@@ -142,6 +149,7 @@ export function PanelAbsensi({ role }) {
     notify('Data absen dihapus'); load()
   }
   async function removeByStudent(studentId, tanggal) {
+    if (isMingguHari) return notify('Absensi libur hari Minggu. Tidak bisa diubah.', 'error')
     const old = todayMap.get(studentId)
     const { error } = await supabase.from('attendance')
       .delete().eq('student_id', studentId).eq('tanggal', tanggal)
@@ -264,12 +272,19 @@ export function PanelAbsensi({ role }) {
         </p>
       )}
 
+      {isMingguHari && (
+        <p className="mb-3 flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs font-medium text-muted-foreground">
+          <CalendarOff className="h-4 w-4 shrink-0" />
+          Absensi libur hari Minggu. Tidak bisa diubah, hanya Senin sampai Sabtu.
+        </p>
+      )}
+
       {loading ? (
         <div className="grid place-items-center py-10 text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : mode === 'hari' ? (
         /* MODE HARI: daftar semua siswa. Developer bisa set status; lainnya lihat saja. */
         <>
-        {canEdit && (
+        {editable && (
           <button
             className="btn-primary mb-3 w-full"
             onClick={markAllHadir}
@@ -289,7 +304,7 @@ export function PanelAbsensi({ role }) {
                   <span className="block truncate text-sm">{s.nama}</span>
                   {rec?.deskripsi && <span className="block truncate text-[11px] text-muted-foreground">{rec.deskripsi}</span>}
                 </div>
-                {!canEdit ? (
+                {!editable ? (
                   <span className={`rounded-md px-2 py-1 text-xs font-semibold ${rec ? STATUS[rec.status].cls : 'bg-muted text-muted-foreground'}`}>
                     {rec ? STATUS[rec.status].label : '—'}
                   </span>
