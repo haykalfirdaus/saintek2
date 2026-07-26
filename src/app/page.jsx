@@ -6,7 +6,7 @@ import { ZoomableImage } from '@/components/zoomable-image'
 import { TaskCard } from '@/components/task-card'
 import { RoleBadge } from '@/components/ui-bits'
 import { KasReminder } from '@/components/kas-reminder'
-import { subjectIcon } from '@/lib/subject-icons'
+import { JadwalMapel } from '@/components/jadwal-mapel'
 import { LottieIcon } from '@/components/lottie-icon'
 import { getLandingData } from '@/lib/data'
 import { formatRupiah } from '@/lib/utils'
@@ -19,7 +19,6 @@ import {
   ArrowRight,
   CheckCircle2,
   XCircle,
-  CalendarDays,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -123,50 +122,8 @@ export default async function HomePage() {
           </div>
 
           <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
-          {/* JADWAL MAPEL (timeline) */}
-          <div className="glass glass-lift p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="flex items-center gap-2.5">
-                <span className="icon-chip h-9 w-9">
-                  <CalendarDays className="h-[18px] w-[18px]" />
-                </span>
-                <span className="text-[15px] font-bold">Jadwal Mapel</span>
-              </span>
-              {!data.isLibur && data.mapelHariIni.length > 0 && (
-                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                  {data.mapelHariIni.length} mapel
-                </span>
-              )}
-            </div>
-            {data.isLibur ? (
-              <p className="text-sm text-muted-foreground">Libur — tidak ada jadwal.</p>
-            ) : data.mapelHariIni.length ? (
-              <ol className="relative space-y-1">
-                {data.mapelHariIni.map((m, i) => {
-                  const Icon = subjectIcon(m)
-                  const last = i === data.mapelHariIni.length - 1
-                  return (
-                    <li key={i} className="relative flex items-center gap-3 py-1.5">
-                      {!last && (
-                        <span className="absolute left-[17px] top-[38px] h-[calc(100%-20px)] w-0.5 bg-border" />
-                      )}
-                      <span className="z-10 grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-primary/15 bg-primary/8 text-primary">
-                        <Icon className="h-[18px] w-[18px]" />
-                      </span>
-                      <span className="flex items-baseline gap-2">
-                        <span className="text-[11px] font-bold text-muted-foreground">
-                          {i + 1}.
-                        </span>
-                        <span className="text-sm font-semibold">{m}</span>
-                      </span>
-                    </li>
-                  )
-                })}
-              </ol>
-            ) : (
-              <p className="text-sm text-muted-foreground">Belum ada jadwal.</p>
-            )}
-          </div>
+          {/* JADWAL MAPEL — pilih hari (Sen–Sab) */}
+          <JadwalMapel mapelPerHari={data.mapelPerHari} />
 
           {/* PIKET */}
           <div className="glass glass-lift p-4">

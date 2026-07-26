@@ -17,16 +17,18 @@ export async function getLandingData() {
 
   const isLibur = now.dayIndex === 0 || !!holiday
 
-  // Mapel hari ini
-  let mapelHariIni = []
-  if (dayKey && !isLibur) {
-    const { data: sched } = await supabase
-      .from('schedules')
-      .select('items')
-      .eq('day_key', dayKey)
-      .maybeSingle()
-    mapelHariIni = sched?.items ?? []
-  }
+  // Jadwal semua hari (Senin–Sabtu) → { senin: [...], selasa: [...], ... }.
+  // Diambil sekaligus supaya landing bisa menampilkan mapel hari mana pun.
+  const { data: allSched } = await supabase
+    .from('schedules')
+    .select('day_key, items')
+  const mapelPerHari = {}
+  ;(allSched ?? []).forEach((r) => {
+    mapelPerHari[r.day_key] = r.items ?? []
+  })
+
+  // Mapel hari ini (subset dari mapelPerHari; kosong saat libur/Minggu).
+  const mapelHariIni = dayKey && !isLibur ? mapelPerHari[dayKey] ?? [] : []
 
   // Piket hari ini
   let piketHariIni = []
@@ -123,6 +125,7 @@ export async function getLandingData() {
     isLibur,
     holiday,
     mapelHariIni,
+    mapelPerHari,
     piketHariIni,
     tugas: tugas ?? [],
     pengumuman: pengumumanAktif,
