@@ -26,6 +26,9 @@ import {
                  - multiple=false → onUploaded(meta | null)
                  - multiple=true  → onUploaded([meta, ...])
     accept     : batasi opsi ['camera','photo','doc','url'] (default semua)
+    initialItems : lampiran awal (dipakai mode Edit agar lampiran lama tampil &
+                 bisa dihapus). Beri prop `key` berbeda saat ganti target edit
+                 supaya komponen remount dengan seed baru.
 
   meta = { url, name, type, size, is_image, source }
 */
@@ -35,6 +38,7 @@ export function UploadField({
   multiple = false,
   onUploaded,
   accept = ['camera', 'photo', 'doc', 'url'],
+  initialItems = [],
 }) {
   const cameraRef = useRef(null)
   const photoRef = useRef(null)
@@ -42,7 +46,7 @@ export function UploadField({
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [items, setItems] = useState([]) // daftar lampiran
+  const [items, setItems] = useState(initialItems) // daftar lampiran
   const [urlText, setUrlText] = useState('')
   const [showUrl, setShowUrl] = useState(false)
 

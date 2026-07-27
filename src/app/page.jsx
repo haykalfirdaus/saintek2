@@ -2,7 +2,8 @@ import { LiveHeader } from '@/components/live-header'
 import { AppShell } from '@/components/app-shell'
 import { AnnouncementPopup } from '@/components/announcement-popup'
 import { GallerySlider } from '@/components/gallery-slider'
-import { ZoomableImage } from '@/components/zoomable-image'
+import { AttachmentList } from '@/components/attachment-list'
+import { collectAttachments } from '@/lib/attachments'
 import { TaskCard } from '@/components/task-card'
 import { RoleBadge } from '@/components/ui-bits'
 import { KasReminder } from '@/components/kas-reminder'
@@ -72,13 +73,7 @@ export default async function HomePage() {
                     {a.created_by_role && (
                       <div className="mt-2"><RoleBadge role={a.created_by_role} /></div>
                     )}
-                    {Array.isArray(a.media_urls) && a.media_urls.length > 0 && (
-                      <div className="mt-3 grid grid-cols-2 gap-2">
-                        {a.media_urls.map((u, i) => (
-                          <ZoomableImage key={i} src={u} alt="" className="h-28 w-full rounded-lg object-cover" />
-                        ))}
-                      </div>
-                    )}
+                    <AttachmentList attachments={collectAttachments(a)} />
                   </article>
                 ))}
               </div>

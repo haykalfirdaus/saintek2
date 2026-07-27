@@ -59,11 +59,11 @@ export const ROLE_CAPS = {
     tugas: true, kas: true, pengumuman: true, popup: false, akun: false, galeri: false, akun_saya: true,
     upload: false, absensi: true, provisioning: false, readonly: true,
   },
-  // Tugas (bisa tulis) + Absensi (lihat saja).
+  // Tugas (bisa tulis + lampiran) + Absensi (lihat saja).
   guru_mapel: {
     siswa: false, piket: false, mapel: false, libur: false,
     tugas: true, kas: false, pengumuman: false, popup: false, akun: false, galeri: false, akun_saya: true,
-    upload: false, absensi: true, provisioning: false, readonly: false,
+    upload: true, absensi: true, provisioning: false, readonly: false,
   },
   // Hanya Piket.
   pengatur_kebersihan: {
@@ -74,7 +74,7 @@ export const ROLE_CAPS = {
 }
 
 // Role yang boleh upload file — dipakai UI gate & dicerminkan di RLS Storage.
-export const UPLOAD_ROLES = ['developer', 'sekretaris', 'ketua']
+export const UPLOAD_ROLES = ['developer', 'sekretaris', 'ketua', 'guru_mapel']
 
 // Urutan role yang bisa di-preview developer lewat "Lihat sebagai".
 export const PREVIEW_ROLES = [

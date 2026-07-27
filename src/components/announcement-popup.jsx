@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Megaphone, X } from 'lucide-react'
+import { AttachmentList } from '@/components/attachment-list'
+import { collectAttachments } from '@/lib/attachments'
 
 /*
   Big centered popup shown on first open. The "Okeii Noted" button closes it.
@@ -46,15 +48,12 @@ export function AnnouncementPopup({ popup }) {
           {popup.isi}
         </p>
 
-        {Array.isArray(popup.media_urls) && popup.media_urls.length > 0 && (
-          <img
-            src={popup.media_urls[0]}
-            alt=""
-            width={384} height={224}
-            loading="lazy" decoding="async"
-            className="mt-4 max-h-56 w-full rounded-lg object-cover"
-          />
-        )}
+        <AttachmentList
+          attachments={collectAttachments(popup)}
+          className="mt-4 space-y-2"
+          imgClassName="max-h-56 w-full rounded-lg object-cover"
+          label={popup.judul || 'Lampiran'}
+        />
 
         <button className="btn-primary mt-6 w-full" onClick={close}>
           <X className="h-5 w-5" />

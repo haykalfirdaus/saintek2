@@ -5,21 +5,33 @@ import { createClient } from '@/lib/supabase/client'
 import { PanelHeader, Toast, SaveButton, RoleBadge } from '@/components/ui-bits'
 import { UploadField } from '@/components/upload-field'
 import { canUpload } from '@/lib/roles'
-import { Trash2, Power } from 'lucide-react'
+import { collectAttachments } from '@/lib/attachments'
+import { Trash2, Power, Pencil, X } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-dialog'
+
+// Ubah ISO timestamp → nilai <input type="date"> (YYYY-MM-DD) waktu lokal.
+function toDateInput(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+const EMPTY_FORM = {
+  mapel: '', isi: '', deadline_type: 'exact',
+  deadline_start: '', deadline_end: '',
+}
 
 // Input Tugas (UI Simpel): Mapel, Isi (teks/lampiran), Deadline (range / jam pasti).
 export function PanelTugas({ role }) {
   const supabase = createClient()
   const confirm = useConfirm()
   const [tasks, setTasks] = useState([])
-  const [form, setForm] = useState({
-    mapel: '', isi: '', deadline_type: 'exact',
-    deadline_start: '', deadline_end: '',
-  })
+  const [form, setForm] = useState(EMPTY_FORM)
   const [attachments, setAttachments] = useState([]) // daftar lampiran dari UploadField
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState(null)
+  const [editId, setEditId] = useState(null) // null = mode tambah
   const allowUpload = canUpload(role)
 
   async function load() {
@@ -28,6 +40,25 @@ export function PanelTugas({ role }) {
   }
   useEffect(() => { load() }, [])
   function notify(msg, type = 'success') { setToast({ msg, type }); setTimeout(() => setToast(null), 2500) }
+
+  function startEdit(t) {
+    setEditId(t.id)
+    setForm({
+      mapel: t.mapel || '',
+      isi: t.isi || '',
+      deadline_type: t.deadline_type || 'exact',
+      deadline_start: toDateInput(t.deadline_start),
+      deadline_end: toDateInput(t.deadline_end),
+    })
+    setAttachments(collectAttachments(t))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function cancelEdit() {
+    setEditId(null)
+    setForm(EMPTY_FORM)
+    setAttachments([])
+  }
 
   async function submit() {
     if (!form.mapel.trim()) return notify('Mapel wajib diisi', 'error')
@@ -47,16 +78,20 @@ export function PanelTugas({ role }) {
         attachment_name: firstDoc?.name ?? null,
         attachment_type: firstDoc?.type ?? null,
         deadline_type: form.deadline_type,
-        // Simpan sebagai tanggal (jam 12 siang WIB) agar tidak bergeser zona waktu.
+        // Simpan sebagai tanggal (jam 12 siang) agar tidak bergeser zona waktu.
         deadline_start: form.deadline_type === 'range' && form.deadline_start ? new Date(form.deadline_start + 'T12:00:00').toISOString() : null,
         deadline_end: form.deadline_end ? new Date(form.deadline_end + 'T12:00:00').toISOString() : null,
-        is_active: true,
       }
-      const { error } = await supabase.from('tasks').insert(payload)
-      if (error) throw error
-      setForm({ mapel: '', isi: '', deadline_type: 'exact', deadline_start: '', deadline_end: '' })
-      setAttachments([])
-      notify('Tugas ditambahkan')
+      if (editId) {
+        const { error } = await supabase.from('tasks').update(payload).eq('id', editId)
+        if (error) throw error
+        notify('Tugas diperbarui')
+      } else {
+        const { error } = await supabase.from('tasks').insert({ ...payload, is_active: true })
+        if (error) throw error
+        notify('Tugas ditambahkan')
+      }
+      cancelEdit()
       load()
     } catch (e) {
       notify(e.message, 'error')
@@ -76,6 +111,7 @@ export function PanelTugas({ role }) {
       danger: true, confirmText: 'Ya, Hapus',
     })
     if (!ok) return
+    if (editId === id) cancelEdit()
     await supabase.from('tasks').delete().eq('id', id)
     load()
   }
@@ -91,12 +127,15 @@ export function PanelTugas({ role }) {
         <textarea className="input-field" rows={3} placeholder="Isi tugas (opsional)" value={form.isi}
           onChange={(e) => setForm((f) => ({ ...f, isi: e.target.value }))} />
 
-        {/* Upload lanjutan (kamera / foto / dokumen / URL) — hanya role tertentu */}
+        {/* Upload lanjutan (kamera / foto / dokumen / URL) — hanya role tertentu.
+            key = editId supaya remount bersih & seed lampiran lama saat edit. */}
         {allowUpload && (
           <UploadField
+            key={editId ?? 'new'}
             bucket="tasks"
             folder="tugas"
             multiple
+            initialItems={attachments}
             onUploaded={setAttachments}
           />
         )}
@@ -131,20 +170,27 @@ export function PanelTugas({ role }) {
           </div>
         </div>
 
-        <SaveButton loading={loading} onClick={submit}>Tambah Tugas</SaveButton>
+        <div className="flex gap-2">
+          <SaveButton loading={loading} onClick={submit}>{editId ? 'Simpan Perubahan' : 'Tambah Tugas'}</SaveButton>
+          {editId && (
+            <button className="btn-ghost" onClick={cancelEdit}><X className="h-4 w-4" /> Batal</button>
+          )}
+        </div>
+        {editId && <p className="text-xs text-muted-foreground">Mode edit — lampiran bisa ditambah atau dihapus.</p>}
       </div>
 
       <div className="space-y-2">
         {tasks.map((t) => (
-          <div key={t.id} className="card flex items-center justify-between p-3">
+          <div key={t.id} className={'card flex items-center justify-between p-3 ' + (editId === t.id ? 'ring-2 ring-primary' : '')}>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{t.mapel} {!t.is_active && <span className="text-xs text-muted-foreground">(arsip)</span>}</p>
               {t.isi && <p className="truncate text-xs text-muted-foreground">{t.isi}</p>}
               {t.created_by_role && <div className="mt-1"><RoleBadge role={t.created_by_role} /></div>}
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              <button onClick={() => startEdit(t)} className="text-muted-foreground hover:text-foreground" title="Edit"><Pencil className="h-4 w-4" /></button>
               <button onClick={() => toggleActive(t)} className="text-muted-foreground" title="Aktif/Arsip"><Power className="h-4 w-4" /></button>
-              <button onClick={() => remove(t.id, t.mapel)} className="text-destructive"><Trash2 className="h-4 w-4" /></button>
+              <button onClick={() => remove(t.id, t.mapel)} className="text-destructive" title="Hapus"><Trash2 className="h-4 w-4" /></button>
             </div>
           </div>
         ))}
